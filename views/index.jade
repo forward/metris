@@ -1,11 +1,9 @@
-h1 Games
-
-ul
+ul#games
   - for(game in games){
     li
       a(href='/game/#{game}')
-        | Game
         = game
   - }
 
-a(href="/game/#{newGame}") Start a new game
+p
+  a(href="/game/#{newGame}") Start a new game

@@ -54,16 +54,16 @@ window.startTetris = (gs) ->
       for id, shape of @shapes
         for i in [0,1,2,3]
           block = shape.blockPosition(i)
-          @drawBlock(c, block.x, block.y, '#b00')
+          @drawBlock(c, block.x, block.y, '#FF6FCF')
     drawBlocks: (c) ->
-      @drawBlock(c, block.x, block.y, "#00b") for block in @blocks
+      @drawBlock(c, block.x, block.y, "#FF0080") for block in @blocks
     drawBlock: (c, x, y, color) ->
       c.fillStyle = color
       x = @x + (@gridSize * x)
       y = @y + (@gridSize * y)
       c.fillRect(x, y, @gridSize, @gridSize)
     drawBounds: (c) ->
-      c.strokeStyle = "#0f0"
+      c.strokeStyle = "#bbb"
       start = @x + (Tetris.viewportOffset.x * @gridSize)
       width = Tetris.viewport.x * @gridSize
       height = Tetris.viewport.y * @gridSize
@@ -73,11 +73,11 @@ window.startTetris = (gs) ->
     constructor: ->
     draw: (c) ->
       gs.clear()
-      gs.background('rgba(200, 200, 200, 1.0)')
+      gs.background('rgba(255, 255, 255, 0.3)')
       c.beginPath()
       c.moveTo(0, Tetris.viewport.y*Tetris.gridSize)
       c.lineTo(Tetris.viewport.x*Tetris.gridSize, Tetris.viewport.y*Tetris.gridSize)
-      c.strokeStyle = "#0f0"
+      c.strokeStyle = "#bbb"
       c.stroke()
 
   class Tetris.AbandonedBlocks
@@ -111,7 +111,7 @@ window.startTetris = (gs) ->
     draw: (c) ->
       vs = Tetris.viewportSpace(@x*Tetris.gridSize+1, @y*Tetris.gridSize+1)
       return unless vs.visible
-      c.fillStyle = "#c00"
+      c.fillStyle = "#FF6FCF"
       c.fillRect(vs.x, vs.y, Tetris.blockSize, Tetris.blockSize)
 
 
