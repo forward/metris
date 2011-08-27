@@ -32,6 +32,12 @@ pipe.channels.on 'event', (eventName, channelName, socket_id, data) ->
   console.log('socket_id '+ socket_id)
   console.log(data)
 
+pipe.channel('game1').on 'event:created', (socketID, data) ->
+  pipe.channel('game1').trigger('created', data)
+
+pipe.channel('game1').on 'event:moved', (socketID, data) ->
+  pipe.channel('game1').trigger('moved', data)
+
 # when a new person connects ->
   # send current state
 

@@ -6,15 +6,21 @@ makeGuid = ->
     (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4())
 
 window.startTetris = (gs) ->
-  gridSize = 20;
-  blockSize = gridSize - 2;
-  shapes = {};
+  gridSize = 20
+  blockSize = gridSize - 2
+  shapes = {}
+  playerID = makeGuid()
   
   channel.bind 'created', (data) ->
+    console.log('created got', data.id)
+    return if data.playerID is playerID
     gs.addEntity( new CubeShape(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, fixed: true) )
   
   channel.bind 'moved', (data) ->
+    console.log('moved got', data.id)
+    return if data.playerID is playerID
     shape = shapes[data.id]
+    return unless shape?
     shape.x = data.x
     shape.y = data.y
     shape.rotate = data.rotate
@@ -51,8 +57,9 @@ window.startTetris = (gs) ->
       drawBlock(definition[3])
     
     created: ->
-      console.log('created', @id)
+      console.log('created sent', @id)
       channel.trigger 'created',
+        playerID: playerID,
         x: @x,
         y: @y,
         rotation: @rotation,
@@ -61,7 +68,9 @@ window.startTetris = (gs) ->
         color: @color
     
     moved: ->
+      console.log('moved sent', @id)
       channel.trigger 'moved',
+        playerID: playerID,
         x: @x,
         y: @y,
         rotation: @rotation,
@@ -165,6 +174,6 @@ window.startTetris = (gs) ->
   setTimeout (->
     # gs.addEntity(new ZShape(x:1, y:1, color: '#f00', fixed: true))
     # gs.addEntity(new SShape(x:5, y:5, color: '#0f0', fixed: false))
-    gs.addEntity(new CubeShape(x:2, y:7, color: '#00f', fixed: true))
+    gs.addEntity(new CubeShape(x:2, y:7, color: '#00f', fixed: false))
     # gs.addEntity(new TShape(x:8, y:3, color: '#000', fixed: true))
     ), 1000
