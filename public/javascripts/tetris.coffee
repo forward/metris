@@ -38,14 +38,36 @@ window.startTetris = (gs) ->
       gs.addEntity(level)
       @blocks = new Tetris.AbandonedBlocks()
       gs.addEntity(@blocks)
+      @map = new Map(0, Tetris.viewport.y*Tetris.gridSize+1, @blocks)
+      gs.addEntity(@map)
       pusher.connection.bind 'connected', ->
         gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: {r:0, g:0, b:0}, owned: true))
   
+  class Map
+    constructor: (@x, @y, @abandonedBlocks) ->
+      @gridSize = 2
+    draw: (c) ->
+      c.fillStyle = "#00b"
+      for block in @abandonedBlocks.blocks
+        x = @x + (@gridSize * block.x)
+        y = @y + (@gridSize * block.y)
+        c.fillRect(x, y, @gridSize, @gridSize)
+      c.strokeStyle = "#0f0"
+      start = @x + (Tetris.viewportOffset.x * @gridSize)
+      end = start + (Tetris.viewport.x * @gridSize)
+      height = Tetris.viewport.y * @gridSize
+      c.strokeRect(start, @y, end, height)
+    
   class Level
     constructor: ->
-    draw: () ->
+    draw: (c) ->
       gs.clear()
       gs.background('rgba(200, 200, 200, 1.0)')
+      c.beginPath()
+      c.moveTo(0, Tetris.viewport.y*Tetris.gridSize)
+      c.lineTo(Tetris.viewport.x*Tetris.gridSize, Tetris.viewport.y*Tetris.gridSize)
+      c.strokeStyle = "#0f0"
+      c.stroke()
       
   class Tetris.AbandonedBlocks
     constructor: ->
