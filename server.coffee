@@ -32,17 +32,20 @@ pipe.channels.on 'event', (eventName, channelName, socket_id, data) ->
   console.log('socket_id '+ socket_id)
   console.log(data)
 
+shapes = {}
+
 pipe.channel('game1').on 'event:created', (socketID, data) ->
+  shapes[data.id] = {id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, fixed: true}
   pipe.channel('game1').trigger('created', data)
 
 pipe.channel('game1').on 'event:moved', (socketID, data) ->
+  shapes[data.id].x = data.x
+  shapes[data.id].y = data.y
+  shapes[data.id].rotation = data.rotation
   pipe.channel('game1').trigger('moved', data)
+
+pipe.sockets.on 'open', (socket_id) ->
+  pipe.channel('game1').trigger('start', shapes)
 
 # when a new person connects ->
   # send current state
-
-# created ->
-  # update current state
-
-# move ->
-  # update current state
