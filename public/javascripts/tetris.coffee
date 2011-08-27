@@ -1,6 +1,23 @@
+pusher = new Pusher('27367b8778629ab23d60')
+channel = pusher.subscribe('game1')
+
+makeGuid = ->
+    S4 = () -> (((1+Math.random())*0x10000)|0).toString(16).substring(1)
+    (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4())
+
 window.startTetris = (gs) ->
   gridSize = 20;
   blockSize = gridSize - 2;
+  shapes = {};
+  
+  channel.bind 'created', (data) ->
+    gs.addEntity( new CubeShape(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, fixed: true) )
+  
+  channel.bind 'moved', (data) ->
+    shape = shapes[data.id]
+    shape.x = data.x
+    shape.y = data.y
+    shape.rotate = data.rotate
   
   class Level
     constructor: ->
@@ -9,12 +26,17 @@ window.startTetris = (gs) ->
       gs.background('rgba(100, 100, 100, 1.0)')
   
   class Shape
-    constructor: (opts) ->
+    constructor: (opts={}) ->
+      isNewObj = opts.id == undefined
+      @id = opts.id || makeGuid()
       @x = opts.x || 0
       @y = opts.y || 0
       @rotation = opts.rotation || 0
       @color = opts.color || '#000'
       @fixed = opts.fixed || false
+      shapes[@id] = this
+      @type = null
+      @created() if isNewObj
 
     draw: (c) ->
       drawBlock = (blockDef) =>
@@ -28,10 +50,28 @@ window.startTetris = (gs) ->
       drawBlock(definition[2])
       drawBlock(definition[3])
     
+    created: ->
+      console.log('created', @id)
+      channel.trigger 'created',
+        x: @x,
+        y: @y,
+        rotation: @rotation,
+        id: @id,
+        type: @type
+        color: @color
+    
+    moved: ->
+      channel.trigger 'moved',
+        x: @x,
+        y: @y,
+        rotation: @rotation,
+        id: @id
+
     # LEFT
     keyDown_37: ->
       return if @fixed
       @x--
+      @moved()
     
     # UP
     keyDown_38: ->
@@ -40,14 +80,17 @@ window.startTetris = (gs) ->
         @rotation = 0
       else 
         @rotation += 1
+      @moved()
     
     # RIGHT
     keyDown_39: ->
       return if @fixed
-      @x++  
+      @x++
+      @moved()
   
   
   class CubeShape extends Shape
+    type: 'C'
     shapeDefinition: (rotation) ->
       { 
         0: [[0,0], [1,1], [0,1], [1,0]], 
@@ -57,6 +100,7 @@ window.startTetris = (gs) ->
       }[rotation]
     
   class LShape extends Shape
+    type: 'L'
     shapeDefinition: (rotation) ->
       { 
         0: [[0,0],[1,0],[1,1],[1,2]], 
@@ -66,6 +110,7 @@ window.startTetris = (gs) ->
       }[rotation]
     
   class JShape extends Shape
+    type: 'J'
     shapeDefinition: (rotation) ->
       { 
         0: [[0,0],[1,0],[0,1],[0,2]], 
@@ -75,6 +120,7 @@ window.startTetris = (gs) ->
       }[rotation]
     
   class SShape extends Shape
+    type: 'S'
     shapeDefinition: (rotation) ->
       { 
         0: [[0,1],[1,1],[1,0],[2,0]], 
@@ -84,6 +130,7 @@ window.startTetris = (gs) ->
       }[rotation]
     
   class ZShape extends Shape
+    type: 'Z'
     shapeDefinition: (rotation) ->
       { 
         0: [[0,0],[1,0],[1,1],[2,1]], 
@@ -93,6 +140,7 @@ window.startTetris = (gs) ->
       }[rotation]
     
   class TShape extends Shape
+    type: 'T'
     shapeDefinition: (rotation) ->
       { 
         0: [[0,0],[1,0],[2,0],[1,1]], 
@@ -102,6 +150,7 @@ window.startTetris = (gs) ->
       }[rotation]
     
   class IShape extends Shape
+    type: 'I'
     shapeDefinition: (rotation) ->
       { 
         0: [[0,0], [0,1], [0,2], [0,3]], 
@@ -113,7 +162,9 @@ window.startTetris = (gs) ->
     
   level = new Level()
   gs.addEntity(level)
-  gs.addEntity(new ZShape(x:1, y:1, color: '#f00', fixed: true))
-  gs.addEntity(new SShape(x:5, y:5, color: '#0f0', fixed: false))
-  gs.addEntity(new CubeShape(x:2, y:7, color: '#00f', fixed: true))
-  gs.addEntity(new TShape(x:8, y:3, color: '#000', fixed: true))
+  setTimeout (->
+    # gs.addEntity(new ZShape(x:1, y:1, color: '#f00', fixed: true))
+    # gs.addEntity(new SShape(x:5, y:5, color: '#0f0', fixed: false))
+    gs.addEntity(new CubeShape(x:2, y:7, color: '#00f', fixed: true))
+    # gs.addEntity(new TShape(x:8, y:3, color: '#000', fixed: true))
+    ), 1000
