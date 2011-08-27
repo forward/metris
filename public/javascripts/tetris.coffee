@@ -195,7 +195,7 @@ window.startTetris = (gs) ->
         gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: {r:0, g:0, b:0}, owned: true))
 
     created: ->
-      console.log('starting create')
+      console.log('creating a new piece')
       channel.trigger 'created',
         playerID: Tetris.playerID,
         x: @x,
@@ -322,7 +322,6 @@ window.startTetris = (gs) ->
   }
 
   channel.bind 'created', (data) ->
-    console.log('created')
     return if data.playerID is Tetris.playerID
     console.log('get going')
     shapeClass = Tetris.Shape.types[data.type]
