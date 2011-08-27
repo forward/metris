@@ -1,11 +1,13 @@
 express = require 'express'
 gameID = 'game1'
 
+pusher_key = (process.env.PUSHER_KEY || 'af77425a09a90cbee51c')
+
 Pipe = require 'pusher-pipe'
 pipe = Pipe.createClient
-  key: '27367b8778629ab23d60',
-  secret: 'cc826eb2b033de7614c6',
-  app_id: 10
+  key:    pusher_key,
+  secret: (process.env.PUSHER_SECRET  || 'fb21cbeef5a569dd6b46'),
+  app_id: (process.env.PUSHER_APP_ID  || 12)
 pipe.connect()
 pipe.debug = true
 
@@ -22,7 +24,7 @@ app.configure ->
   app.use express.static(publicDir)
 
 app.get '/', (req, res) ->
-    res.render('index', {})
+    res.render('index', {pipe_key: pusher_key})
 
 port = process.env.PORT || 8080
 app.listen port, ->

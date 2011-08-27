@@ -1,4 +1,4 @@
-pusher = new Pusher('27367b8778629ab23d60')
+pusher = new Pusher(pusher_key)
 channel = pusher.subscribe('game1')
 
 makeGuid = ->
