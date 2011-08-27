@@ -17,7 +17,7 @@ window.startTetris = (gs) ->
       @viewportOffset.x + (@viewport.x/2) - 2
     levelSize: 16 # blocks
     viewportOffset: # blocks
-      x: 13
+      x: 0
       y: 0
     shapes: {}
     playerID: makeGuid()
@@ -116,9 +116,6 @@ window.startTetris = (gs) ->
        {x: x, y: y}
     
     canMoveDown: ->
-      floor = Tetris.height - 1
-      for i in [0,1,2,3]
-        return false if @blockPosition(i).y == floor
       return @canMoveTo(0, +1)
       
     canMoveTo: (xOffset, yOffset, rotation=null) ->
@@ -126,6 +123,9 @@ window.startTetris = (gs) ->
         x = @blockPosition(i, rotation).x + xOffset
         y = @blockPosition(i, rotation).y + yOffset
         return false if Tetris.blocks.contains(x, y)
+        return false if x < 0
+        return false if x >= Tetris.levelSize
+        return false if y >= Tetris.viewport.y
       return true
     
     draw: (c) ->
