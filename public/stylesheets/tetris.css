@@ -1,0 +1,8 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+#wrapper {
+  width: 320px;
+  margin: 0 auto;
+}

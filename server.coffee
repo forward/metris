@@ -1,5 +1,6 @@
 express = require 'express'
-gameID = 'game1'
+games = {}
+gameIDs = []
 
 pusher_key = (process.env.PUSHER_KEY || 'af77425a09a90cbee51c')
 
@@ -10,6 +11,10 @@ pipe = Pipe.createClient
   app_id: (process.env.PUSHER_APP_ID  || 12)
 pipe.connect()
 # pipe.debug = true
+
+makeGuid = ->
+    S4 = () -> (((1+Math.random())*0x10000)|0).toString(16).substring(1)
+    (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4())
 
 app = express.createServer express.logger()
 
@@ -24,108 +29,120 @@ app.configure ->
   app.use express.static(publicDir)
 
 app.get '/', (req, res) ->
-    res.render('index', {pipe_key: pusher_key})
+  newGame = makeGuid()
+  res.render('index', {pipe_key: pusher_key, games: games, newGame: newGame})
+
+app.get '/game/:id', (req, res) ->
+  gameID = req.params.id
+  if games[gameID] == undefined
+    games[gameID] = {
+      shapes: {},
+      grid: new Grid(160,24),
+      socketShapes: {},
+      intervalId: null
+    }
+    gameIDs.push(gameID)
+  res.render('game', {pipe_key: pusher_key, game: gameID})
 
 port = process.env.PORT || 8080
 app.listen port, ->
   console.log "Listening on " + port
 
-class Grid  
-    
+#######################################################
+
+class Grid
+
   constructor: (x,y) ->
     @width = x
     @height = y
     @grid = []  #pay attention, grid[y][x] !!!
-    for y in [0..@height]    
+    for y in [0..@height]
       row = []
       for x in [0..@width]
         row[x] = 0
-    
-      @grid[y] = row  
-        
+
+      @grid[y] = row
+
   add: (aBlock) ->
-    # console.log('adding a block', aBlock.y, aBlock.x)    
+    # console.log('adding a block', aBlock.y, aBlock.x)
     @grid[aBlock.y][aBlock.x] = 1
-    
+
   blocks: ->
     blocks = []
-    for y in [0..@height]    
+    for y in [0..@height]
       for x in [0..@width]
         if (@grid[y][x] == 1)
-          blocks.push({x: x, y: y})  
+          blocks.push({x: x, y: y})
     blocks
-    
+
 
   needsRefresh:  ->
     currentLine = @height
     completedRows = 0
     newGrid = []
-    for y in [@height..0] 
+    for y in [@height..0]
       sum = @grid[y].reduce (a, b) -> a + b
       if sum < @width
         newGrid[currentLine] = @grid[y]
         currentLine -= 1
       else
         completedRows++
-    console.log("completed", completedRows)
-    
+
     if (completedRows > 0)
       for line in [0..completedRows-1]
         row = []
         for x in [0..@width]
           row[x] = 0
         newGrid[line] = row
-             
+
     @grid = newGrid
     # console.log("new", @grid)
     completedRows > 0
-    
-shapes = {}
-grid = new Grid(160,24)
-socketShapes = {}
-intervalId = null
 
-pipe.channel(gameID).on 'event:created', (socketID, data) ->
-  shapes[data.id] = {id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, type: data.type, fixed: true}
-  socketShapes[socketID] = data.id
+pipe.channels.on 'event:created', (gameID, socket_id, data) ->
+  game = games[gameID]
+  game.shapes[data.id] = {id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, type: data.type, fixed: true}
+  game.socketShapes[socketID] = data.id
+
   pipe.channel(gameID).trigger('created', data, socketID)
 
-pipe.channel(gameID).on 'event:moved', (socketID, data) ->
-  shapes[data.id].x = data.x
-  shapes[data.id].y = data.y
-  shapes[data.id].rotation = data.rotation
+pipe.channels.on 'event:moved', (gameID, socketID, data) ->
+  game = games[gameID]
+  game.shapes[data.id].x = data.x
+  game.shapes[data.id].y = data.y
+  game.shapes[data.id].rotation = data.rotation
   pipe.channel(gameID).trigger('moved', data, socketID)
 
-pipe.channel(gameID).on 'event:removed', (socketID, data) ->
-  delete shapes[data.id]
+pipe.channels.on 'event:removed', (gameID, socketID, data) ->
+  delete game.shapes[data.id]
   pipe.channel(gameID).trigger('inFinalPosition', data)
-  
-pipe.channel(gameID).on 'event:blockAdded', (socketID, data) ->
-  grid.add(data)
-  console.log(data.x, data.y)
+
+pipe.channels.on 'event:blockAdded', (gameID, socketID, data) ->
+  game = games[gameID]
+  game.grid.add(data)
+
   pipe.channel(gameID).trigger('blockAdded', data)
-  console.log("blocks", grid.blocks())
-  if grid.needsRefresh()
-    pipe.channel(gameID).trigger('refreshLines', grid.blocks())  
-  
+  if game.grid.needsRefresh()
+      pipe.channel(gameID).trigger('refreshLines', game.grid.blocks())
+
   if (data.y <= 1)  #end of game
-    console.log("end of game")
     pipe.channel(gameID).trigger('endOfGame')
-    clearInterval intervalId
+    delete games[gameID]
+    console.log gameIDs
+    gameIDs.splice(gameIDs.indexOf(gameID), 1);
+    console.log gameIDs
 
-
-pipe.sockets.on 'open', (socketID) ->
-  console.log(shapes);
-  pipe.socket(socketID).trigger('start', shapes:shapes, blocks:grid.blocks())
+pipe.channels.on 'event:ready', (gameID, socketID, data) ->
+  game = games[gameID]
+  pipe.socket(socketID).trigger('start', shapes:game.shapes, blocks:game.grid.blocks())
 
 pipe.sockets.on 'close', (socketID) ->
   shapeID = socketShapes[socketID]
   delete shapes[shapeID]
   pipe.channel(gameID).trigger('purge', {id:shapeID})
 
-tick = ->
-  console.log('tick')
-  pipe.channel(gameID).trigger('drop', {})
-
 pipe.on 'connected', ->
-  intervalId = setInterval tick, 200
+  setInterval (->
+    for gameID in gameIDs
+      pipe.channel(gameID).trigger('drop', {})
+  ), 200

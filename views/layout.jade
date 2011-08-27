@@ -2,10 +2,14 @@
 html(lang="en")
   head
     title Tetris
+  body
+    #wrapper
+      h1 Metris
+      != body
     script(type="text/javascript")
-      var pusher_key = '#{pipe_key}'
+      var pusher_key = '#{pipe_key}';
     script(type="text/javascript", src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js")
     script(type="text/javascript", src="http://js.pusherapp.com/1.10.1-pre/pusher.min.js")
     script(type="text/javascript", src="/javascripts/gamesoup/jsgamesoup.js")
     script(type="text/javascript", src="/javascripts/tetris.js")
-  body!= body
+    link(rel="stylesheet", type="text/css", href="/stylesheets/tetris.css")
