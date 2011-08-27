@@ -1,4 +1,5 @@
 express = require 'express'
+gameID = 'game1'
 
 Pipe = require 'pusher-pipe'
 pipe = Pipe.createClient
@@ -6,6 +7,7 @@ pipe = Pipe.createClient
   secret: 'cc826eb2b033de7614c6',
   app_id: 10
 pipe.connect()
+pipe.debug = true
 
 app = express.createServer express.logger()
 
@@ -35,24 +37,29 @@ pipe.channels.on 'event', (eventName, channelName, socket_id, data) ->
 shapes = {}
 socketShapes = {}
 
-pipe.channel('game1').on 'event:created', (socketID, data) ->
+pipe.channel(gameID).on 'event:created', (socketID, data) ->
   shapes[data.id] = {id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, type: data.type, fixed: true}
   socketShapes[socketID] = data.id
-  pipe.channel('game1').trigger('created', data, socketID)
+  pipe.channel(gameID).trigger('created', data, socketID)
 
-pipe.channel('game1').on 'event:moved', (socketID, data) ->
+pipe.channel(gameID).on 'event:moved', (socketID, data) ->
   shapes[data.id].x = data.x
   shapes[data.id].y = data.y
   shapes[data.id].rotation = data.rotation
-  pipe.channel('game1').trigger('moved', data, socketID)
+  pipe.channel(gameID).trigger('moved', data, socketID)
 
 pipe.sockets.on 'open', (socketID) ->
-  pipe.socket(socketID).trigger('start', shapes)
+  console.log(shapes);
+  pipe.channel(gameID).trigger('start', shapes)
 
 pipe.sockets.on 'close', (socketID) ->
   shapeID = socketShapes[socketID]
   delete shapes[shapeID]
-  pipe.channel('game1').trigger('purge', {id:shapeID})
+  pipe.channel(gameID).trigger('purge', {id:shapeID})
 
-# when a new person connects ->
-  # send current state
+tick = ->
+  console.log('tick')
+  pipe.channel(gameID).trigger('drop', {})
+
+pipe.on 'connected', ->
+  setInterval tick, 2000
