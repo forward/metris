@@ -55,6 +55,7 @@ app.listen port, ->
 class Grid
 
   constructor: (x,y) ->
+    @score = 0
     @width = x
     @height = y
     @grid = []  #pay attention, grid[y][x] !!!
@@ -79,16 +80,19 @@ class Grid
 
 
   needsRefresh:  ->
+    @score = 0
     currentLine = @height
     completedRows = 0
     newGrid = []
     for y in [@height..0]
       sum = @grid[y].reduce (a, b) -> a + b
+      @score += sum
       if sum < @width
         newGrid[currentLine] = @grid[y]
         currentLine -= 1
       else
         completedRows++
+        @score += sum #double the score for a line
 
     if (completedRows > 0)
       for line in [0..completedRows-1]
@@ -125,7 +129,10 @@ pipe.channels.on 'event:blockAdded', (gameID, socketID, data) ->
 
   pipe.channel(gameID).trigger('blockAdded', data)
   if game.grid.needsRefresh()
-      pipe.channel(gameID).trigger('refreshLines', game.grid.blocks())
+    pipe.channel(gameID).trigger('refreshLines', game.grid.blocks())
+
+  pipe.channel(gameID).trigger('scoreUpdate', {score: game.grid.score})
+  console.log('sent score', game.grid.score)
 
   if (data.y <= 1)  #end of game
     pipe.channel(gameID).trigger('endOfGame')

@@ -343,7 +343,7 @@ window.startTetris = (gs) ->
     for block in info.blocks
       Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
     gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: {r:0, g:0, b:0}, owned: true))
-    console.log('finished stating')
+    console.log('finished starting')
 
   channel.bind 'refreshLines', (blocks) ->
     Tetris.blocks.reset()
@@ -353,8 +353,9 @@ window.startTetris = (gs) ->
   channel.bind 'purge', (data) ->
     shape = Tetris.shapes[data.id]
     shape.remove()
-
+    
   channel.bind 'inFinalPosition', (data) ->
+    console.log('FINAL')    
     return if data.playerID is Tetris.playerID
     shape = Tetris.shapes[data.id]
     shape.x = data.x
@@ -368,6 +369,9 @@ window.startTetris = (gs) ->
 
   channel.bind 'endOfGame', ->
     console.log("THE END!")
+
+  channel.bind 'scoreUpdate', (data) ->
+    $('#score').html(data.score)
 
   channel.bind 'blockAdded', (data) ->
     return if data.playerID is Tetris.playerID
