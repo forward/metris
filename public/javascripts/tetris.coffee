@@ -19,6 +19,8 @@ window.startTetris = (gs) ->
       @height = @viewport.y / @gridSize
       level = new Level()
       gs.addEntity(level)
+      @blocks = new Tetris.AbandonedBlocks()
+      gs.addEntity(@blocks)
       pusher.connection.bind 'connected', ->
         gs.addEntity(Tetris.Shape.randomShape(x:0, y:0, color: {r:0, g:0, b:0}, owned: true))
   class Level
@@ -26,6 +28,16 @@ window.startTetris = (gs) ->
     draw: () ->
       gs.clear()
       gs.background('rgba(200, 200, 200, 1.0)')
+      
+  class Tetris.AbandonedBlocks
+    constructor: ->
+      @blocks = []
+    
+    add: (block) ->
+      @blocks.push(block)    
+      
+    draw: (c) -> 
+      block.draw(c) for block in @blocks
       
   class Tetris.Block
     constructor: (opts={})->
@@ -102,10 +114,10 @@ window.startTetris = (gs) ->
         
     shapeInFinalPosition: ->
       console.log("final position!!!!!!!!!!!!!!!!!!!")
-      gs.addEntity(new Tetris.Block(@blockPosition(0)))
-      gs.addEntity(new Tetris.Block(@blockPosition(1)))
-      gs.addEntity(new Tetris.Block(@blockPosition(2)))
-      gs.addEntity(new Tetris.Block(@blockPosition(3)))
+      Tetris.blocks.add(new Tetris.Block(@blockPosition(0)))
+      Tetris.blocks.add(new Tetris.Block(@blockPosition(1)))
+      Tetris.blocks.add(new Tetris.Block(@blockPosition(2)))
+      Tetris.blocks.add(new Tetris.Block(@blockPosition(3)))
       @remove()
       if @owned
         gs.addEntity(Tetris.Shape.randomShape(x:0, y:0, color: {r:0, g:0, b:0}, owned: true))      
