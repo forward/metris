@@ -30,7 +30,7 @@ pipe.channels.on 'event', (eventName, channelName, socket_id, data) ->
   console.log('eventName '+ eventName)
   console.log('channelName '+ channelName)
   console.log('socket_id '+ socket_id)
-  console.log('data '+ data)
+  console.log(data)
 
 # when a new person connects ->
   # send current state
