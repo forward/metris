@@ -1,0 +1,11 @@
+{
+  "name": "tetris",
+  "version": "0.0.1",
+  "dependencies": {
+    "nko": "0.1.0",
+    "express": "2.2.0",
+    "coffee-script": "1.1.2",
+    "less": "1.1.4",
+    "jade": "0.14.2"
+  }
+}
