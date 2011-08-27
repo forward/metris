@@ -23,6 +23,7 @@ window.startTetris = (gs) ->
       gs.addEntity(@blocks)
       pusher.connection.bind 'connected', ->
         gs.addEntity(Tetris.Shape.randomShape(x:0, y:0, color: {r:0, g:0, b:0}, owned: true))
+  
   class Level
     constructor: ->
     draw: () ->
@@ -38,6 +39,13 @@ window.startTetris = (gs) ->
       
     draw: (c) -> 
       block.draw(c) for block in @blocks
+      
+    contains: (x,y) ->
+      for block in @blocks
+        if block.x == x && block.y == y
+          console.log('collision!!!!!!!!!!')
+          return true 
+      return false
       
   class Tetris.Block
     constructor: (opts={})->
@@ -78,16 +86,24 @@ window.startTetris = (gs) ->
           rotation: @rotation
       
         
-    blockPosition: (blockNumber) ->
-       definition = @shapeDefinition(this.rotation)[blockNumber]
+    blockPosition: (blockNumber, rotation=null) ->
+       definition = @shapeDefinition(rotation || @rotation)[blockNumber]
        x = @x + definition[0] 
        y = @y + definition[1]
        {x: x, y: y}
     
     canMoveDown: ->
-      test = Tetris.height - 1
+      floor = Tetris.height - 1
       for i in [0,1,2,3]
-        return false if @blockPosition(i).y == test
+        return false if @blockPosition(i).y == floor
+      return @canMoveTo(0, +1)
+      
+    canMoveTo: (xOffset, yOffset, rotation=null) ->
+      for i in [0,1,2,3]
+        x = @blockPosition(i, rotation).x + xOffset
+        y = @blockPosition(i, rotation).y + yOffset
+        console.log(x,y, Tetris.blocks.contains(x, y))
+        return false if Tetris.blocks.contains(x, y)
       return true
     
     draw: (c) ->
@@ -146,6 +162,7 @@ window.startTetris = (gs) ->
     # LEFT
     keyDown_37: ->
       return unless @owned
+      return unless @canMoveTo(-1, 0)
       @x--
       @moved()
 
@@ -153,14 +170,17 @@ window.startTetris = (gs) ->
     keyDown_38: ->
       return unless @owned
       if @rotation is 3
-        @rotation = 0
+        newRotation = 0
       else
-        @rotation += 1
-      @moved()
+        newRotation = @rotation + 1
+      if @canMoveTo(0,0,newRotation)
+        @rotation = newRotation
+        @moved()
 
     # RIGHT
     keyDown_39: ->
       return unless @owned
+      return unless @canMoveTo(1, 0)
       @x++
       @moved()
 
