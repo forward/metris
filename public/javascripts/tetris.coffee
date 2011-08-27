@@ -6,35 +6,39 @@ makeGuid = ->
     (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4())
 
 window.startTetris = (gs) ->
-  gridSize = 20
-  blockSize = gridSize - 2
-  shapes = {}
-  playerID = makeGuid()
-
+  
+  Tetris = {
+    gridSize: 20
+    blockSize: 18
+    shapes: {}
+    playerID: makeGuid()
+    
+  }
+  
   class Level
     constructor: ->
     draw: () ->
       gs.clear()
       gs.background('rgba(100, 100, 100, 1.0)')
-
-  class Shape
+      
+  class Tetris.Shape
     constructor: (opts={}) ->
       isNewObj = opts.id == undefined
-      @id = opts.id || playerID
+      @id = opts.id || makeGuid()
       @x = opts.x || 0
       @y = opts.y || 0
       @rotation = opts.rotation || 0
       @color = opts.color || '#000'
-      @fixed = opts.fixed || false
-      shapes[@id] = this
+      @owned = opts.owned || false
+      Tetris.shapes[@id] = this
       @created() if isNewObj
 
     draw: (c) ->
       drawBlock = (blockDef) =>
-        x = (@x*gridSize) + (blockDef[0]*gridSize)
-        y = (@y*gridSize) + (blockDef[1]*gridSize)
+        x = (@x*Tetris.gridSize) + (blockDef[0]*Tetris.gridSize)
+        y = (@y*Tetris.gridSize) + (blockDef[1]*Tetris.gridSize)
         c.fillStyle = @color
-        c.fillRect(x, y, blockSize, blockSize)
+        c.fillRect(x, y, Tetris.blockSize, Tetris.blockSize)
       definition = @shapeDefinition(this.rotation)
       drawBlock(definition[0])
       drawBlock(definition[1])
@@ -48,7 +52,7 @@ window.startTetris = (gs) ->
     created: ->
       console.log('created sent', @id)
       channel.trigger 'created',
-        playerID: playerID,
+        playerID: Tetris.playerID,
         x: @x,
         y: @y,
         rotation: @rotation,
@@ -57,9 +61,10 @@ window.startTetris = (gs) ->
         color: @color
 
     moved: ->
+      return unless @owned
       console.log('moved sent', @id)
       channel.trigger 'moved',
-        playerID: playerID,
+        playerID: Tetris.playerID,
         x: @x,
         y: @y,
         rotation: @rotation,
@@ -67,13 +72,13 @@ window.startTetris = (gs) ->
 
     # LEFT
     keyDown_37: ->
-      return if @fixed
+      return unless @owned
       @x--
       @moved()
 
     # UP
     keyDown_38: ->
-      return if @fixed
+      return unless @owned
       if @rotation is 3
         @rotation = 0
       else
@@ -82,12 +87,12 @@ window.startTetris = (gs) ->
 
     # RIGHT
     keyDown_39: ->
-      return if @fixed
+      return unless @owned
       @x++
       @moved()
 
 
-  class CubeShape extends Shape
+  class Tetris.CubeShape extends Tetris.Shape
     type: 'C'
     shapeDefinition: (rotation) ->
       {
@@ -97,7 +102,7 @@ window.startTetris = (gs) ->
         3: [[0,0], [1,1], [0,1], [1,0]]
       }[rotation]
 
-  class LShape extends Shape
+  class Tetris.LShape extends Tetris.Shape
     type: 'L'
     shapeDefinition: (rotation) ->
       {
@@ -107,7 +112,7 @@ window.startTetris = (gs) ->
         3: [[0,0],[1,0],[2,0],[0,1]]
       }[rotation]
 
-  class JShape extends Shape
+  class Tetris.JShape extends Tetris.Shape
     type: 'J'
     shapeDefinition: (rotation) ->
       {
@@ -117,7 +122,7 @@ window.startTetris = (gs) ->
         3: [[0,0],[0,1],[1,1],[2,1]]
       }[rotation]
 
-  class SShape extends Shape
+  class Tetris.SShape extends Tetris.Shape
     type: 'S'
     shapeDefinition: (rotation) ->
       {
@@ -127,7 +132,7 @@ window.startTetris = (gs) ->
         3: [[0,0],[0,1],[1,1],[1,2]]
       }[rotation]
 
-  class ZShape extends Shape
+  class Tetris.ZShape extends Tetris.Shape
     type: 'Z'
     shapeDefinition: (rotation) ->
       {
@@ -137,7 +142,7 @@ window.startTetris = (gs) ->
         3: [[1,0],[1,1],[0,1],[0,2]]
       }[rotation]
 
-  class TShape extends Shape
+  class Tetris.TShape extends Tetris.Shape
     type: 'T'
     shapeDefinition: (rotation) ->
       {
@@ -147,7 +152,7 @@ window.startTetris = (gs) ->
         3: [[2,-1],[1,0],[2,0],[2,1]]
       }[rotation]
 
-  class IShape extends Shape
+  class Tetris.IShape extends Tetris.Shape
     type: 'I'
     shapeDefinition: (rotation) ->
       {
@@ -157,51 +162,48 @@ window.startTetris = (gs) ->
         3: [[-1,1],[0,1],[1,1],[2,1]]
       }[rotation]
 
-  Shape.types = {
-    'C': CubeShape,
-    'L': LShape,
-    'J': JShape,
-    'S': SShape,
-    'Z': ZShape,
-    'T': TShape,
-    'I': IShape
+  Tetris.Shape.types = {
+    'C': Tetris.CubeShape,
+    'L': Tetris.LShape,
+    'J': Tetris.JShape,
+    'S': Tetris.SShape,
+    'Z': Tetris.ZShape,
+    'T': Tetris.TShape,
+    'I': Tetris.IShape
   }
 
   channel.bind 'created', (data) ->
     console.log('created got', data.id)
-    shapeClass = Shape.types[data.type]
-    if playerID != data.id
-      gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, fixed: true) )
+    return if data.playerID is Tetris.playerID
+    shapeClass = Tetris.Shape.types[data.type]
+    gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color) )
 
   channel.bind 'moved', (data) ->
     console.log('moved got', data.id)
-    shape = shapes[data.id]
+    return if data.playerID is Tetris.playerID
+    shape = Tetris.shapes[data.id]
     return unless shape?
     shape.x = data.x
     shape.y = data.y
     shape.rotation = data.rotation
 
   pusher.back_channel.bind 'start', (s) ->
-    console.log(s)
     for id, data of s
       console.log('start got', id, data)
-      shapeClass = Shape.types[data.type]
-      gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, fixed: true) )
+      shapeClass = Tetris.Shape.types[data.type]
+      gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color) )
 
   channel.bind 'purge', (data) ->
-    shape = shapes[data.id]
+    shape = Tetris.shapes[data.id]
     gs.delEntity(shape)
-    delete shapes[data.id]
+    delete Tetris.shapes[data.id]
 
   channel.bind 'drop', ->
-    for id, data of shapes
+    for id, data of Tetris.shapes
       console.log('dropping', id)
-      shapes[id].drop()
+      Tetris.shapes[id].drop()
 
   level = new Level()
   gs.addEntity(level)
   pusher.connection.bind 'connected', ->
-    # gs.addEntity(new ZShape(x:1, y:1, color: '#f00', fixed: true))
-    # gs.addEntity(new SShape(x:5, y:5, color: '#0f0', fixed: false))
-    # gs.addEntity(new CubeShape(x:2, y:7, color: '#00f', fixed: false))
-    gs.addEntity(new LShape(x:1, y:2, color: '#ff0', fixed: false))
+    gs.addEntity(new Tetris.LShape(x:1, y:2, color: '#ff0', owned: true))

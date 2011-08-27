@@ -30,12 +30,6 @@ port = process.env.PORT || 8080
 app.listen port, ->
   console.log "Listening on " + port
 
-pipe.channels.on 'event', (eventName, channelName, socket_id, data) ->
-  console.log('eventName '+ eventName)
-  console.log('channelName '+ channelName)
-  console.log('socket_id '+ socket_id)
-  console.log(data)
-
 shapes = {}
 socketShapes = {}
 
@@ -52,7 +46,7 @@ pipe.channel(gameID).on 'event:moved', (socketID, data) ->
 
 pipe.sockets.on 'open', (socketID) ->
   console.log(shapes);
-  pipe.channel(gameID).trigger('start', shapes)
+  pipe.socket(socketID).trigger('start', shapes)
 
 pipe.sockets.on 'close', (socketID) ->
   shapeID = socketShapes[socketID]
@@ -64,4 +58,4 @@ tick = ->
   pipe.channel(gameID).trigger('drop', {})
 
 pipe.on 'connected', ->
-  setInterval tick, 2000
+  setInterval tick, 5000
