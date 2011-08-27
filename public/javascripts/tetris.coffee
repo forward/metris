@@ -15,7 +15,7 @@ window.startTetris = (gs) ->
       y: 24
     initialShapeOffset: -> 
       @viewportOffset.x + (@viewport.x/2) - 2
-    levelSize: 16 # blocks
+    levelSize: 160 # blocks
     viewportOffset: # blocks
       x: 0
       y: 0

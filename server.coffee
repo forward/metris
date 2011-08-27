@@ -81,7 +81,7 @@ class Grid
     completedRows > 0
     
 shapes = {}
-grid = new Grid(16,24)
+grid = new Grid(160,24)
 socketShapes = {}
 intervalId = null
 
