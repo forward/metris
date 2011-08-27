@@ -45,7 +45,6 @@ window.startTetris = (gs) ->
     contains: (x,y) ->
       for block in @blocks
         if block.x == x && block.y == y
-          console.log('collision!!!!!!!!!!')
           return true 
       return false
       
@@ -53,7 +52,6 @@ window.startTetris = (gs) ->
     constructor: (opts={})->
       @x = opts.x
       @y = opts.y    
-      console.log("BLOCK", @x, @y)
     
     draw: (c) ->
       c.fillStyle = "#c00"
@@ -104,7 +102,6 @@ window.startTetris = (gs) ->
       for i in [0,1,2,3]
         x = @blockPosition(i, rotation).x + xOffset
         y = @blockPosition(i, rotation).y + yOffset
-        console.log(x,y, Tetris.blocks.contains(x, y))
         return false if Tetris.blocks.contains(x, y)
       return true
     
@@ -131,7 +128,6 @@ window.startTetris = (gs) ->
         @shapeInFinalPosition()
         
     shapeInFinalPosition: ->
-      console.log("final position!!!!!!!!!!!!!!!!!!!")
       Tetris.blocks.add(new Tetris.Block(@blockPosition(0)))
       Tetris.blocks.add(new Tetris.Block(@blockPosition(1)))
       Tetris.blocks.add(new Tetris.Block(@blockPosition(2)))
@@ -306,6 +302,9 @@ window.startTetris = (gs) ->
     for id, data of Tetris.shapes
       console.log('dropping', id)
       Tetris.shapes[id].drop()
+      
+  channel.bind 'endOfGame', ->
+    console.log("THE END!!!!!!!!!")
   
   channel.bind 'blockAdded', (data) ->
     return if data.playerID is Tetris.playerID

@@ -9,7 +9,7 @@ pipe = Pipe.createClient
   secret: (process.env.PUSHER_SECRET  || 'fb21cbeef5a569dd6b46'),
   app_id: (process.env.PUSHER_APP_ID  || 12)
 pipe.connect()
-pipe.debug = true
+# pipe.debug = true
 
 app = express.createServer express.logger()
 
@@ -33,6 +33,7 @@ app.listen port, ->
 shapes = {}
 blocks = []
 socketShapes = {}
+intervalId = null
 
 pipe.channel(gameID).on 'event:created', (socketID, data) ->
   shapes[data.id] = {id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, type: data.type, fixed: true}
@@ -51,7 +52,12 @@ pipe.channel(gameID).on 'event:removed', (socketID, data) ->
   
 pipe.channel(gameID).on 'event:blockAdded', (socketID, data) ->
   blocks.push(data)
+  console.log(data.x, data.y)
   pipe.channel(gameID).trigger('blockAdded', data)
+  if (data.y <= 1)  #end of game
+    console.log("end of game")
+    pipe.channel(gameID).trigger('endOfGame')
+    clearInterval intervalId
 
 pipe.sockets.on 'open', (socketID) ->
   console.log(shapes);
@@ -67,4 +73,4 @@ tick = ->
   pipe.channel(gameID).trigger('drop', {})
 
 pipe.on 'connected', ->
-  setInterval tick, 500
+  intervalId = setInterval tick, 500
