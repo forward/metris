@@ -132,7 +132,7 @@ pipe.channels.on 'event:blockAdded', (gameID, socketID, data) ->
     pipe.channel(gameID).trigger('refreshLines', game.grid.blocks())
 
   pipe.channel(gameID).trigger('scoreUpdate', {score: game.grid.score})
-  console.log('sent score', game.grid.score)
+  # console.log('sent score', game.grid.score)
 
   if (data.y <= 1)  #end of game
     pipe.channel(gameID).trigger('endOfGame')

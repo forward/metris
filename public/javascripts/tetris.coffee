@@ -195,7 +195,7 @@ window.startTetris = (gs) ->
         gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: {r:0, g:0, b:0}, owned: true))
 
     created: ->
-      console.log('creating a new piece')
+      # console.log('creating a new piece')
       channel.trigger 'created',
         playerID: Tetris.playerID,
         x: @x,
@@ -323,7 +323,6 @@ window.startTetris = (gs) ->
 
   channel.bind 'created', (data) ->
     return if data.playerID is Tetris.playerID
-    console.log('get going')
     shapeClass = Tetris.Shape.types[data.type]
     gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color) )
 
@@ -336,14 +335,12 @@ window.startTetris = (gs) ->
     shape.rotation = data.rotation
 
   pusher.back_channel.bind 'start', (info) ->
-    console.log('start')
     for id, data of info.shapes
       shapeClass = Tetris.Shape.types[data.type]
       gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color) )
     for block in info.blocks
       Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
     gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: {r:0, g:0, b:0}, owned: true))
-    console.log('finished starting')
 
   channel.bind 'refreshLines', (blocks) ->
     Tetris.blocks.reset()
@@ -353,9 +350,8 @@ window.startTetris = (gs) ->
   channel.bind 'purge', (data) ->
     shape = Tetris.shapes[data.id]
     shape.remove()
-    
+
   channel.bind 'inFinalPosition', (data) ->
-    console.log('FINAL')    
     return if data.playerID is Tetris.playerID
     shape = Tetris.shapes[data.id]
     shape.x = data.x
