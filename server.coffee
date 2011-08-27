@@ -5,6 +5,7 @@ pipe = Pipe.createClient
   key: '27367b8778629ab23d60',
   secret: 'cc826eb2b033de7614c6',
   app_id: 10
+pipe.connect()
 
 app = express.createServer express.logger()
 
@@ -24,3 +25,18 @@ app.get '/', (req, res) ->
 port = process.env.PORT || 8080
 app.listen port, ->
   console.log "Listening on " + port
+
+pipe.channels.on 'event', (eventName, channelName, socket_id, data) ->
+  console.log('eventName '+ eventName)
+  console.log('channelName '+ channelName)
+  console.log('socket_id '+ socket_id)
+  console.log('data '+ data)
+
+# when a new person connects ->
+  # send current state
+
+# created ->
+  # update current state
+
+# move ->
+  # update current state
