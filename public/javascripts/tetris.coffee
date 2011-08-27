@@ -38,20 +38,27 @@ window.startTetris = (gs) ->
       gs.addEntity(level)
       @blocks = new Tetris.AbandonedBlocks()
       gs.addEntity(@blocks)
-      @map = new Map(0, Tetris.viewport.y*Tetris.gridSize+1, @blocks)
+      @map = new Map(0, Tetris.viewport.y*Tetris.gridSize+1, @blocks.blocks, @shapes)
       gs.addEntity(@map)
       pusher.connection.bind 'connected', ->
         gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: {r:0, g:0, b:0}, owned: true))
   
   class Map
-    constructor: (@x, @y, @abandonedBlocks) ->
+    constructor: (@x, @y, @blocks, @shapes) ->
       @gridSize = 2
     draw: (c) ->
+      @drawBlocks(c)
+      @drawShapes(c)
+      @drawBounds(c)
+    drawShapes: (c) ->
+      null
+    drawBlocks: (c) ->
       c.fillStyle = "#00b"
-      for block in @abandonedBlocks.blocks
+      for block in @blocks
         x = @x + (@gridSize * block.x)
         y = @y + (@gridSize * block.y)
         c.fillRect(x, y, @gridSize, @gridSize)
+    drawBounds: (c) ->
       c.strokeStyle = "#0f0"
       start = @x + (Tetris.viewportOffset.x * @gridSize)
       end = start + (Tetris.viewport.x * @gridSize)
