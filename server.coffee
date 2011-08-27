@@ -30,8 +30,58 @@ port = process.env.PORT || 8080
 app.listen port, ->
   console.log "Listening on " + port
 
+class Grid  
+    
+  constructor: (x,y) ->
+    @width = x
+    @height = y
+    @grid = []  #pay attention, grid[y][x] !!!
+    for y in [0..@height]    
+      row = []
+      for x in [0..@width]
+        row[x] = 0
+    
+      @grid[y] = row  
+        
+  add: (aBlock) ->
+    # console.log('adding a block', aBlock.y, aBlock.x)    
+    @grid[aBlock.y][aBlock.x] = 1
+    
+  blocks: ->
+    blocks = []
+    for y in [0..@height]    
+      for x in [0..@width]
+        if (@grid[y][x] == 1)
+          blocks.push({x: x, y: y})  
+    blocks
+    
+
+  needsRefresh:  ->
+    currentLine = @height
+    completedRows = 0
+    newGrid = []
+    for y in [@height..0] 
+      sum = @grid[y].reduce (a, b) -> a + b
+      if sum < @width
+        newGrid[currentLine] = @grid[y]
+        currentLine -= 1
+      else
+        completedRows++
+    console.log("completed", completedRows)
+    
+    if (completedRows > 0)
+      for line in [0..completedRows-1]
+        row = []
+        for x in [0..@width]
+          row[x] = 0
+        newGrid[line] = row
+             
+    @grid = newGrid
+    # console.log("new", @grid)
+    completedRows > 0
+    
 shapes = {}
-blocks = []
+grid = new Grid(16,24)
 socketShapes = {}
 intervalId = null
 
@@ -51,17 +101,22 @@ pipe.channel(gameID).on 'event:removed', (socketID, data) ->
   pipe.channel(gameID).trigger('inFinalPosition', data)
   
 pipe.channel(gameID).on 'event:blockAdded', (socketID, data) ->
-  blocks.push(data)
+  grid.add(data)
   console.log(data.x, data.y)
   pipe.channel(gameID).trigger('blockAdded', data)
+  console.log("blocks", grid.blocks())
+  if grid.needsRefresh()
+    pipe.channel(gameID).trigger('refreshLines', grid.blocks())  
+  
   if (data.y <= 1)  #end of game
     console.log("end of game")
     pipe.channel(gameID).trigger('endOfGame')
     clearInterval intervalId
 
+
 pipe.sockets.on 'open', (socketID) ->
   console.log(shapes);
-  pipe.socket(socketID).trigger('start', shapes:shapes, blocks:blocks)
+  pipe.socket(socketID).trigger('start', shapes:shapes, blocks:grid.blocks())
 
 pipe.sockets.on 'close', (socketID) ->
   shapeID = socketShapes[socketID]
@@ -73,4 +128,4 @@ tick = ->
   pipe.channel(gameID).trigger('drop', {})
 
 pipe.on 'connected', ->
-  intervalId = setInterval tick, 500
+  intervalId = setInterval tick, 200

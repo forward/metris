@@ -15,7 +15,7 @@ window.startTetris = (gs) ->
       y: 24
     initialShapeOffset: -> 
       @viewportOffset.x + (@viewport.x/2) - 2
-    levelSize: 50 # blocks
+    levelSize: 16 # blocks
     viewportOffset: # blocks
       x: 13
       y: 0
@@ -55,6 +55,11 @@ window.startTetris = (gs) ->
       @blocks.push(block) 
       if notify
         channel.trigger 'blockAdded', x: block.x, y: block.y, playerID: Tetris.playerID
+        
+    reset: ->
+      for block in @blocks
+        gs.delEntity(block)
+      @blocks = []
       
     draw: (c) -> 
       block.draw(c) for block in @blocks
@@ -301,7 +306,12 @@ window.startTetris = (gs) ->
       gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color) )
     for block in info.blocks
       Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
-
+      
+  channel.bind 'refreshLines', (blocks) ->
+    Tetris.blocks.reset()
+    for block in blocks
+      Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
+      
   channel.bind 'purge', (data) ->
     shape = Tetris.shapes[data.id]
     shape.remove()
