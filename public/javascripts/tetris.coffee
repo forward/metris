@@ -11,20 +11,6 @@ window.startTetris = (gs) ->
   shapes = {}
   playerID = makeGuid()
   
-  channel.bind 'created', (data) ->
-    console.log('created got', data.id)
-    return if data.playerID is playerID
-    gs.addEntity( new CubeShape(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, fixed: true) )
-  
-  channel.bind 'moved', (data) ->
-    console.log('moved got', data.id)
-    return if data.playerID is playerID
-    shape = shapes[data.id]
-    return unless shape?
-    shape.x = data.x
-    shape.y = data.y
-    shape.rotate = data.rotate
-  
   class Level
     constructor: ->
     draw: () ->
@@ -41,7 +27,6 @@ window.startTetris = (gs) ->
       @color = opts.color || '#000'
       @fixed = opts.fixed || false
       shapes[@id] = this
-      @type = null
       @created() if isNewObj
 
     draw: (c) ->
@@ -64,7 +49,7 @@ window.startTetris = (gs) ->
         y: @y,
         rotation: @rotation,
         id: @id,
-        type: @type
+        type: @type,
         color: @color
     
     moved: ->
@@ -168,12 +153,35 @@ window.startTetris = (gs) ->
         3: [[-1,1],[0,1],[1,1],[2,1]]
       }[rotation]
   
-    
+  Shape.types = {
+    'C': CubeShape,
+    'L': LShape,
+    'J': JShape,
+    'S': SShape,
+    'Z': ZShape,
+    'T': TShape,
+    'I': IShape
+  }
+  
+  channel.bind 'created', (data) ->
+    console.log('created got', data.id)
+    return if data.playerID is playerID
+    shapeClass = Shape.types[data.type]
+    gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, fixed: true) )
+  
+  channel.bind 'moved', (data) ->
+    console.log('moved got', data.id)
+    return if data.playerID is playerID
+    shape = shapes[data.id]
+    return unless shape?
+    shape.x = data.x
+    shape.y = data.y
+    shape.rotation = data.rotation
+  
   level = new Level()
   gs.addEntity(level)
-  setTimeout (->
+  pusher.connection.bind 'connected', ->
     # gs.addEntity(new ZShape(x:1, y:1, color: '#f00', fixed: true))
     # gs.addEntity(new SShape(x:5, y:5, color: '#0f0', fixed: false))
-    gs.addEntity(new CubeShape(x:2, y:7, color: '#00f', fixed: false))
-    # gs.addEntity(new TShape(x:8, y:3, color: '#000', fixed: true))
-    ), 1000
+    # gs.addEntity(new CubeShape(x:2, y:7, color: '#00f', fixed: false))
+    gs.addEntity(new TShape(x:8, y:3, color: '#000', fixed: false))
