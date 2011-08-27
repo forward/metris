@@ -22,7 +22,9 @@ window.startTetris = (gs) ->
     shapes: {}
     playerID: makeGuid()
     viewportSpace: (x,y) ->
-      {x: x-(@viewportOffset.x*@gridSize), y: y-(@viewportOffset.y*@gridSize)}
+      ret = {x: x-(@viewportOffset.x*@gridSize), y: y-(@viewportOffset.y*@gridSize)}
+      ret.visible = ret.x >= 0 && ret.x <= (@viewport.x*@gridSize)
+      ret
     maybeAdjustViewport: (shape) ->
       leftDiff = shape.x - @viewportOffset.x
       if leftDiff <= 2 and @viewportOffset.x > 0
@@ -69,8 +71,9 @@ window.startTetris = (gs) ->
       @y = opts.y    
     
     draw: (c) ->
-      c.fillStyle = "#c00"
       vs = Tetris.viewportSpace(@x*Tetris.gridSize+1, @y*Tetris.gridSize+1)
+      return unless vs.visible
+      c.fillStyle = "#c00"
       c.fillRect(vs.x, vs.y, Tetris.blockSize, Tetris.blockSize)
           
       
@@ -127,8 +130,9 @@ window.startTetris = (gs) ->
         x = (@x*Tetris.gridSize) + (blockDef[0]*Tetris.gridSize) + 1 
         y = (@y*Tetris.gridSize) + (blockDef[1]*Tetris.gridSize) + 1
         alpha = if @owned then 1 else 0.4
-        c.fillStyle = rgba(@color, alpha)
         vs = Tetris.viewportSpace(x,y)
+        return unless vs.visible
+        c.fillStyle = rgba(@color, alpha)
         c.fillRect(vs.x, vs.y, Tetris.blockSize, Tetris.blockSize)
       definition = @shapeDefinition(this.rotation)
       drawBlock(definition[0])
