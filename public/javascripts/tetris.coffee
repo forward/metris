@@ -34,8 +34,10 @@ window.startTetris = (gs) ->
     constructor: ->
       @blocks = []
     
-    add: (block) ->
-      @blocks.push(block)    
+    add: (block, notify=true) ->
+      @blocks.push(block) 
+      if notify
+        channel.trigger 'blockAdded', x: block.x, y: block.y, playerID: Tetris.playerID
       
     draw: (c) -> 
       block.draw(c) for block in @blocks
@@ -280,11 +282,13 @@ window.startTetris = (gs) ->
     shape.y = data.y
     shape.rotation = data.rotation
 
-  pusher.back_channel.bind 'start', (s) ->
-    for id, data of s
+  pusher.back_channel.bind 'start', (info) ->
+    for id, data of info.shapes
       console.log('start got', id, data)
       shapeClass = Tetris.Shape.types[data.type]
       gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color) )
+    for block in info.blocks
+      Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
 
   channel.bind 'purge', (data) ->
     shape = Tetris.shapes[data.id]
@@ -302,5 +306,9 @@ window.startTetris = (gs) ->
     for id, data of Tetris.shapes
       console.log('dropping', id)
       Tetris.shapes[id].drop()
+  
+  channel.bind 'blockAdded', (data) ->
+    return if data.playerID is Tetris.playerID
+    Tetris.blocks.add(new Tetris.Block(x:data.x, y:data.y), false)
 
   Tetris.init()

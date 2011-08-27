@@ -31,6 +31,7 @@ app.listen port, ->
   console.log "Listening on " + port
 
 shapes = {}
+blocks = []
 socketShapes = {}
 
 pipe.channel(gameID).on 'event:created', (socketID, data) ->
@@ -47,10 +48,14 @@ pipe.channel(gameID).on 'event:moved', (socketID, data) ->
 pipe.channel(gameID).on 'event:removed', (socketID, data) ->
   delete shapes[data.id]
   pipe.channel(gameID).trigger('inFinalPosition', data)
+  
+pipe.channel(gameID).on 'event:blockAdded', (socketID, data) ->
+  blocks.push(data)
+  pipe.channel(gameID).trigger('blockAdded', data)
 
 pipe.sockets.on 'open', (socketID) ->
   console.log(shapes);
-  pipe.socket(socketID).trigger('start', shapes)
+  pipe.socket(socketID).trigger('start', shapes:shapes, blocks:blocks)
 
 pipe.sockets.on 'close', (socketID) ->
   shapeID = socketShapes[socketID]
