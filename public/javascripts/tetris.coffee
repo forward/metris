@@ -7,7 +7,7 @@ makeGuid = ->
 
 window.startTetris = (gs) ->
   
-  Tetris = {
+  Tetris =
     gridSize: 20
     blockSize: 18
     shapes: {}
@@ -17,7 +17,6 @@ window.startTetris = (gs) ->
       gs.addEntity(level)
       pusher.connection.bind 'connected', ->
         gs.addEntity(Tetris.Shape.randomShape(x:0, y:0, color: '#ff0', owned: true))
-  }
   
   class Level
     constructor: ->
@@ -43,8 +42,8 @@ window.startTetris = (gs) ->
     
     draw: (c) ->
       drawBlock = (blockDef) =>
-        x = (@x*Tetris.gridSize) + (blockDef[0]*Tetris.gridSize)
-        y = (@y*Tetris.gridSize) + (blockDef[1]*Tetris.gridSize)
+        x = (@x*Tetris.gridSize) + (blockDef[0]*Tetris.gridSize) + 1 
+        y = (@y*Tetris.gridSize) + (blockDef[1]*Tetris.gridSize) + 1
         c.fillStyle = @color
         c.fillRect(x, y, Tetris.blockSize, Tetris.blockSize)
       definition = @shapeDefinition(this.rotation)
