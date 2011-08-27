@@ -10,19 +10,21 @@ window.startTetris = (gs) ->
   Tetris =
     gridSize: 20
     blockSize: 18
+    viewport: 
+      x: 320
+      y: 480
     shapes: {}
     playerID: makeGuid()
     init: ->
       level = new Level()
       gs.addEntity(level)
       pusher.connection.bind 'connected', ->
-        gs.addEntity(Tetris.Shape.randomShape(x:0, y:0, color: '#ff0', owned: true))
-  
+        gs.addEntity(Tetris.Shape.randomShape(x:0, y:0, color: {r:0, g:0, b:0}, owned: true))
   class Level
     constructor: ->
     draw: () ->
       gs.clear()
-      gs.background('rgba(100, 100, 100, 1.0)')
+      gs.background('rgba(200, 200, 200, 1.0)')
       
   class Tetris.Shape
     @randomShape: (opts) ->
@@ -35,16 +37,19 @@ window.startTetris = (gs) ->
       @x = opts.x || 0
       @y = opts.y || 0
       @rotation = opts.rotation || 0
-      @color = opts.color || '#000'
+      @color = opts.color || {r:0, g:0, b:0, a:1}
       @owned = opts.owned || false
       Tetris.shapes[@id] = this
       @created() if isNewObj
     
     draw: (c) ->
+      rgba = (o, alpha=1) ->
+        "rgba(#{o.r},#{o.g},#{o.b},#{alpha})"
       drawBlock = (blockDef) =>
         x = (@x*Tetris.gridSize) + (blockDef[0]*Tetris.gridSize) + 1 
         y = (@y*Tetris.gridSize) + (blockDef[1]*Tetris.gridSize) + 1
-        c.fillStyle = @color
+        alpha = if @owned then 1 else 0.4
+        c.fillStyle = rgba(@color, alpha)
         c.fillRect(x, y, Tetris.blockSize, Tetris.blockSize)
       definition = @shapeDefinition(this.rotation)
       drawBlock(definition[0])
