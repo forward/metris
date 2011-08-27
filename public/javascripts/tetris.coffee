@@ -51,13 +51,14 @@ window.startTetris = (gs) ->
       @drawShapes(c)
       @drawBounds(c)
     drawShapes: (c) ->
-      null
+      
     drawBlocks: (c) ->
+      @drawBlock(c, block.x, block.y) for block in @blocks
+    drawBlock: (c, x, y) ->
       c.fillStyle = "#00b"
-      for block in @blocks
-        x = @x + (@gridSize * block.x)
-        y = @y + (@gridSize * block.y)
-        c.fillRect(x, y, @gridSize, @gridSize)
+      x = @x + (@gridSize * x)
+      y = @y + (@gridSize * y)
+      c.fillRect(x, y, @gridSize, @gridSize)
     drawBounds: (c) ->
       c.strokeStyle = "#0f0"
       start = @x + (Tetris.viewportOffset.x * @gridSize)
