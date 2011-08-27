@@ -14,6 +14,7 @@ window.startTetris = (gs) ->
       @y = opts.y || 0
       @rotation = opts.rotation || 0
       @color = opts.color || '#000'
+      @fixed = opts.fixed || false
 
     draw: (c) ->
       drawBlock = (blockDef) =>
@@ -29,10 +30,12 @@ window.startTetris = (gs) ->
     
     # LEFT
     keyDown_37: ->
+      return if @fixed
       @x--
     
     # UP
     keyDown_38: ->
+      return if @fixed
       if @rotation is 3
         @rotation = 0
       else 
@@ -40,6 +43,7 @@ window.startTetris = (gs) ->
     
     # RIGHT
     keyDown_39: ->
+      return if @fixed
       @x++  
   
   
@@ -109,7 +113,7 @@ window.startTetris = (gs) ->
     
   level = new Level()
   gs.addEntity(level)
-  gs.addEntity(new ZShape(x:1, y:1, color: '#f00'))
-  gs.addEntity(new SShape(x:5, y:5, color: '#0f0'))
-  gs.addEntity(new CubeShape(x:2, y:7, color: '#00f'))
-  gs.addEntity(new TShape(x:8, y:3, color: '#000'))
+  gs.addEntity(new ZShape(x:1, y:1, color: '#f00', fixed: true))
+  gs.addEntity(new SShape(x:5, y:5, color: '#0f0', fixed: false))
+  gs.addEntity(new CubeShape(x:2, y:7, color: '#00f', fixed: true))
+  gs.addEntity(new TShape(x:8, y:3, color: '#000', fixed: true))
