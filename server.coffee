@@ -130,9 +130,7 @@ pipe.channels.on 'event:blockAdded', (gameID, socketID, data) ->
   if (data.y <= 1)  #end of game
     pipe.channel(gameID).trigger('endOfGame')
     delete games[gameID]
-    console.log gameIDs
     gameIDs.splice(gameIDs.indexOf(gameID), 1);
-    console.log gameIDs
 
 pipe.channels.on 'event:ready', (gameID, socketID, data) ->
   game = games[gameID]
