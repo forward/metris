@@ -1,5 +1,11 @@
 express = require 'express'
 
+var Pipe = require('pusher-pipe');
+var pipe = Pipe.createClient({key: '27367b8778629ab23d60',
+    secret: 'cc826eb2b033de7614c6',
+    app_id: 10
+});
+
 app = express.createServer express.logger()
 
 app.configure ->
