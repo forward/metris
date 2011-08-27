@@ -7,9 +7,9 @@ app.configure ->
   app.set 'view engine', 'jade'
   app.use express.bodyParser()
   app.use express.methodOverride()
-  app.use express.compiler({ src: publicDir, enable: ['less'] })
   publicDir = __dirname + '/public'
-  app.use express.compiler(src: publicDir + '/javascripts', enable: ['coffeescript'])
+  app.use express.compiler({ src: publicDir, enable: ['less'] })
+  app.use express.compiler({ src: publicDir, enable: ['coffeescript'] })
   app.use app.router
   app.use express.static(publicDir)
 
