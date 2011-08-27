@@ -165,23 +165,27 @@ window.startTetris = (gs) ->
   
   channel.bind 'created', (data) ->
     console.log('created got', data.id)
-    return if data.playerID is playerID
     shapeClass = Shape.types[data.type]
     gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, fixed: true) )
   
   channel.bind 'moved', (data) ->
     console.log('moved got', data.id)
-    return if data.playerID is playerID
     shape = shapes[data.id]
     return unless shape?
     shape.x = data.x
     shape.y = data.y
     shape.rotation = data.rotation
   
-  channel.bind 'start', (data) ->
-    console.log('start got', data.id)
-    shapeClass = Shape.types[data.type]
-    gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, fixed: true) )
+  pusher.back_channel.bind 'start', (shapes) ->
+    console.log('start got', shapes)
+    for id, data of shapes
+      shapeClass = Shape.types[data.type]
+      gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, fixed: true) )
+
+  channel.bind 'purge', (data) ->
+    shape = shapes[data.id]
+    gs.delEntity(shape)
+    delete shapes[data.id]
   
   level = new Level()
   gs.addEntity(level)

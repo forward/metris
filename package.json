@@ -7,6 +7,6 @@
     "coffee-script": "1.1.2",
     "less": "1.1.4",
     "jade": "0.14.2",
-    "pusher-pipe": "0.0.4"
+    "pusher-pipe": "0.0.5"
   }
 }
