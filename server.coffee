@@ -2,6 +2,8 @@ express = require 'express'
 games = {}
 gameIDs = []
 
+require('nko')('LqNOy7Hy1JHYB4yU')
+
 pusher_key = (process.env.PUSHER_KEY || 'af77425a09a90cbee51c')
 
 Pipe = require 'pusher-pipe'
