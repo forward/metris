@@ -12,7 +12,11 @@ window.startTetris = (gs) ->
     blockSize: 18
     shapes: {}
     playerID: makeGuid()
-    
+    init: ->
+      level = new Level()
+      gs.addEntity(level)
+      pusher.connection.bind 'connected', ->
+        gs.addEntity(Tetris.Shape.randomShape(x:0, y:0, color: '#ff0', owned: true))
   }
   
   class Level
@@ -22,6 +26,10 @@ window.startTetris = (gs) ->
       gs.background('rgba(100, 100, 100, 1.0)')
       
   class Tetris.Shape
+    @randomShape: (opts) ->
+      keys = Object.keys(Tetris.Shape.types)
+      pos = Math.floor(Math.random()*keys.length)
+      new Tetris.Shape.types[keys[pos]](opts)
     constructor: (opts={}) ->
       isNewObj = opts.id == undefined
       @id = opts.id || makeGuid()
@@ -32,7 +40,7 @@ window.startTetris = (gs) ->
       @owned = opts.owned || false
       Tetris.shapes[@id] = this
       @created() if isNewObj
-
+    
     draw: (c) ->
       drawBlock = (blockDef) =>
         x = (@x*Tetris.gridSize) + (blockDef[0]*Tetris.gridSize)
@@ -203,7 +211,4 @@ window.startTetris = (gs) ->
       console.log('dropping', id)
       Tetris.shapes[id].drop()
 
-  level = new Level()
-  gs.addEntity(level)
-  pusher.connection.bind 'connected', ->
-    gs.addEntity(new Tetris.LShape(x:1, y:2, color: '#ff0', owned: true))
+  Tetris.init()
