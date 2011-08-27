@@ -13,10 +13,10 @@ window.startTetris = (gs) ->
     viewport: 
       x: 320
       y: 480
-    height: 24
     shapes: {}
     playerID: makeGuid()
     init: ->
+      @height = @viewport.y / @gridSize
       level = new Level()
       gs.addEntity(level)
       pusher.connection.bind 'connected', ->
