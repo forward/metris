@@ -44,6 +44,10 @@ pipe.channel(gameID).on 'event:moved', (socketID, data) ->
   shapes[data.id].rotation = data.rotation
   pipe.channel(gameID).trigger('moved', data, socketID)
 
+pipe.channel(gameID).on 'event:removed', (socketID, data) ->
+  delete shapes[data.id]
+  pipe.channel(gameID).trigger('inFinalPosition', data)
+
 pipe.sockets.on 'open', (socketID) ->
   console.log(shapes);
   pipe.socket(socketID).trigger('start', shapes)
@@ -58,4 +62,4 @@ tick = ->
   pipe.channel(gameID).trigger('drop', {})
 
 pipe.on 'connected', ->
-  setInterval tick, 5000
+  setInterval tick, 500

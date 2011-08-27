@@ -13,6 +13,7 @@ window.startTetris = (gs) ->
     viewport: 
       x: 320
       y: 480
+    height: 24
     shapes: {}
     playerID: makeGuid()
     init: ->
@@ -25,6 +26,17 @@ window.startTetris = (gs) ->
     draw: () ->
       gs.clear()
       gs.background('rgba(200, 200, 200, 1.0)')
+      
+  class Tetris.Block
+    constructor: (opts={})->
+      @x = opts.x
+      @y = opts.y    
+      console.log("BLOCK", @x, @y)
+    
+    draw: (c) ->
+      c.fillStyle = "#000"
+      c.fillRect(@x*Tetris.gridSize+1, @y*Tetris.gridSize+1,Tetris.blockSize, Tetris.blockSize)  
+          
       
   class Tetris.Shape
     @randomShape: (opts) ->
@@ -41,6 +53,30 @@ window.startTetris = (gs) ->
       @owned = opts.owned || false
       Tetris.shapes[@id] = this
       @created() if isNewObj
+      
+    remove: ->
+      gs.delEntity(this)
+      delete Tetris.shapes[@id]
+      if @owned
+        channel.trigger 'removed', 
+          id: @id,
+          playerID: Tetris.playerID,
+          x: @x,
+          y: @y,
+          rotation: @rotation
+      
+        
+    blockPosition: (blockNumber) ->
+       definition = @shapeDefinition(this.rotation)[blockNumber]
+       x = @x + definition[0] 
+       y = @y + definition[1]
+       {x: x, y: y}
+    
+    canMoveDown: ->
+      test = Tetris.height - 1
+      for i in [0,1,2,3]
+        return false if @blockPosition(i).y == test
+      return true
     
     draw: (c) ->
       rgba = (o, alpha=1) ->
@@ -58,8 +94,21 @@ window.startTetris = (gs) ->
       drawBlock(definition[3])
 
     drop: ->
-      @y++
-      @moved()
+	    if @canMoveDown()
+        @y++
+        @moved()
+      else
+        @shapeInFinalPosition()
+        
+    shapeInFinalPosition: ->
+      console.log("final position!!!!!!!!!!!!!!!!!!!")
+      gs.addEntity(new Tetris.Block(@blockPosition(0)))
+      gs.addEntity(new Tetris.Block(@blockPosition(1)))
+      gs.addEntity(new Tetris.Block(@blockPosition(2)))
+      gs.addEntity(new Tetris.Block(@blockPosition(3)))
+      @remove()
+      if @owned
+        gs.addEntity(Tetris.Shape.randomShape(x:0, y:0, color: {r:0, g:0, b:0}, owned: true))      
 
     created: ->
       console.log('created sent', @id)
@@ -207,8 +256,15 @@ window.startTetris = (gs) ->
 
   channel.bind 'purge', (data) ->
     shape = Tetris.shapes[data.id]
-    gs.delEntity(shape)
-    delete Tetris.shapes[data.id]
+    shape.remove()
+  
+  channel.bind 'inFinalPosition', (data) ->
+    return if data.playerID is Tetris.playerID
+    shape = Tetris.shapes[data.id]
+    shape.x = data.x
+    shape.y = data.y
+    shape.rotation = data.rotation
+    shape.shapeInFinalPosition()
 
   channel.bind 'drop', ->
     for id, data of Tetris.shapes
