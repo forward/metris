@@ -178,6 +178,11 @@ window.startTetris = (gs) ->
     shape.y = data.y
     shape.rotation = data.rotation
   
+  channel.bind 'start', (data) ->
+    console.log('start got', data.id)
+    shapeClass = Shape.types[data.type]
+    gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, fixed: true) )
+  
   level = new Level()
   gs.addEntity(level)
   pusher.connection.bind 'connected', ->
