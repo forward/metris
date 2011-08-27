@@ -46,7 +46,7 @@ window.startTetris = (gs) ->
       console.log("BLOCK", @x, @y)
     
     draw: (c) ->
-      c.fillStyle = "#000"
+      c.fillStyle = "#c00"
       c.fillRect(@x*Tetris.gridSize+1, @y*Tetris.gridSize+1,Tetris.blockSize, Tetris.blockSize)  
           
       
