@@ -119,8 +119,6 @@ class Level
       c.strokeStyle = "#E6CCD3"
       c.stroke()
     
-    # Tetris.blocksize
-
 class Tetris.AbandonedBlocks
   constructor: ->
     @blocks = []

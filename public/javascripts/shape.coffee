@@ -87,11 +87,11 @@ class window.Tetris.Shape
       @shapeInFinalPosition()
 
   shapeInFinalPosition: ->    
+    Tetris.am.play 'block-placed' unless (Tetris.sfxMuted && @owned)
     Tetris.blocks.add(new Tetris.Block(@blockPosition(0)), @owned)
     Tetris.blocks.add(new Tetris.Block(@blockPosition(1)), @owned)
     Tetris.blocks.add(new Tetris.Block(@blockPosition(2)), @owned)
     Tetris.blocks.add(new Tetris.Block(@blockPosition(3)), @owned)
-    Tetris.am.play 'block-placed' unless Tetris.sfxMuted  
     @remove()
     if @owned
       Tetris.gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: Tetris.playerBlockColor, owned: true))
