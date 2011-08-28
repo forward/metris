@@ -36,22 +36,31 @@ window.Tetris =
     rightDiff = (@viewportOffset.x+@viewport.x) - (shape.x+4)
     if rightDiff <= 2 and (@viewportOffset.x+@viewport.x) < @levelSize
       @viewportOffset.x += 1
-  init: ->
-    @gs = new JSGameSoup(document.getElementById('tetris'), 40) # framerate
-    @am = new AudioManager()
-    @am.load '/sounds/block-placed.wav', 'block-placed'
-    @am.load '/sounds/line-completed.wav', 'line-completed'
-    # random viewport starting position
-    @viewportOffset.x = Math.floor(Math.random() * (@levelSize - @viewport.x))
-    @height = @viewport.y
-    level = new Level()
-    @gs.addEntity(level)
-    @blocks = new Tetris.AbandonedBlocks()
-    @gs.addEntity(@blocks)
-    @map = new Map(0, Tetris.viewport.y*Tetris.gridSize+1, @blocks.blocks, @shapes)
-    @gs.addEntity(@map)
-    channel.trigger 'ready'
-    @gs.launch()
+  loadAvatar: (callback) ->
+    return callback() unless @twitterUsername
+    $.getJSON "http://twitter.com/statuses/user_timeline/#{@twitterUsername}.json?callback=?&count=1", (data) =>
+      @avatar = data[0].user.profile_image_url
+      @avatarImage = new Image()
+      @avatarImage.onload = (=> callback(@avatar))
+      @avatarImage.src = @avatar
+  init: (options) ->
+    @twitterUsername = options.twitterUsername
+    @loadAvatar => 
+      @gs = new JSGameSoup(document.getElementById('tetris'), 40) # framerate
+      @am = new AudioManager()
+      @am.load '/sounds/block-placed.wav', 'block-placed'
+      @am.load '/sounds/line-completed.wav', 'line-completed'
+      # random viewport starting position
+      @viewportOffset.x = Math.floor(Math.random() * (@levelSize - @viewport.x))
+      @height = @viewport.y
+      level = new Level()
+      @gs.addEntity(level)
+      @blocks = new Tetris.AbandonedBlocks()
+      @gs.addEntity(@blocks)
+      @map = new Map(0, Tetris.viewport.y*Tetris.gridSize+1, @blocks.blocks, @shapes)
+      @gs.addEntity(@map)
+      channel.trigger 'ready'
+      @gs.launch()
 
 class Map
   constructor: (@x, @y, @blocks, @shapes) ->
@@ -128,7 +137,8 @@ class Tetris.Block
 channel.bind 'created', (data) ->
   return if data.playerID is Tetris.playerID
   shapeClass = Tetris.Shape.types[data.type]
-  Tetris.gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color) )
+  console.log(data.avatar)
+  Tetris.gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, avatar: data.avatar) )
 
 channel.bind 'moved', (data) ->
   return if data.playerID is Tetris.playerID
@@ -141,7 +151,7 @@ channel.bind 'moved', (data) ->
 pusher.back_channel.bind 'start', (info) ->
   for id, data of info.shapes
     shapeClass = Tetris.Shape.types[data.type]
-    Tetris.gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color) )
+    Tetris.gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, avatar: data.avatar) )
   for block in info.blocks
     Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
   Tetris.gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: Tetris.playerBlockColor, owned: true))
@@ -191,6 +201,7 @@ channel.bind 'blockAdded', (data) ->
   return if data.playerID is Tetris.playerID
   Tetris.blocks.add(new Tetris.Block(x:data.x, y:data.y), false)
 
+<<<<<<< HEAD
 
 $('a.start-game').click ->
   $('#score').show()
@@ -207,3 +218,16 @@ $('a.start-game').click ->
     Tetris.gs.entitiesCall 'keyDown_40'
   $('.control#rotate').click ->
     Tetris.gs.entitiesCall 'keyDown_38'
+=======
+gameStart = ->
+    $('#score').show()
+    $('#playerNumber').show()
+    $('#intro').hide()
+    username = $('#username-input').val()
+    username = null unless username.length > 0
+    Tetris.init(twitterUsername: username)
+    false
+
+$('a.start-game').click(gameStart)
+$('#intro form').submit(gameStart)
+>>>>>>> avatars!

@@ -119,7 +119,7 @@ class Grid
 
 pipe.channels.on 'event:created', (gameID, socketID, data) ->
   game = games[gameID]
-  game.shapes[data.id] = {id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, type: data.type, fixed: true}
+  game.shapes[data.id] = {id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, type: data.type, avatar: data.avatar, fixed: true}
   game.socketShapes[socketID] = data.id
 
   pipe.channel(gameID).trigger('created', data, socketID)

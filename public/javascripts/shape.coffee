@@ -3,6 +3,7 @@ class window.Tetris.Shape
     keys = Object.keys(Tetris.Shape.types)
     pos = Math.floor(Math.random()*keys.length)
     new Tetris.Shape.types[keys[pos]](opts)
+    
   constructor: (opts={}) ->
     isNewObj = opts.id == undefined
     @id = opts.id || makeGuid()
@@ -11,9 +12,21 @@ class window.Tetris.Shape
     @rotation = opts.rotation || 0
     @color = opts.color || {r:0, g:0, b:0, a:1}
     @owned = opts.owned || false
+    @avatar = (if @owned then Tetris.avatar else opts.avatar) || null
+    @avatarImage = null
+    @loadAvatar()
     Tetris.shapes[@id] = this
     @created() if isNewObj
-
+    
+  loadAvatar: ->
+    if @owned
+      @avatarImage = Tetris.avatarImage
+    else
+      return unless @avatar
+      img = new Image()
+      img.onload = (=> @avatarImage = img)
+      img.src = @avatar
+  
   remove: ->
     Tetris.gs.delEntity(this)
     delete Tetris.shapes[@id]
@@ -59,6 +72,7 @@ class window.Tetris.Shape
       return unless vs.visible
       c.fillStyle = @colorString()
       c.fillRect(vs.x, vs.y, Tetris.blockSize, Tetris.blockSize)
+      c.drawImage(@avatarImage, vs.x, vs.y, Tetris.blockSize, Tetris.blockSize) if @avatarImage
     definition = @shapeDefinition(this.rotation)
     drawBlock(definition[0])
     drawBlock(definition[1])
@@ -91,7 +105,8 @@ class window.Tetris.Shape
       rotation: @rotation,
       id: @id,
       type: @type,
-      color: @color
+      color: @color,
+      avatar: @avatar
 
   moved: ->
     return unless @owned
