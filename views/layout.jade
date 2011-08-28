@@ -12,10 +12,12 @@ html(lang="en")
         a(href='/') Metris
       != body
       footer
-        a(href='http://forwardtechnology.co.uk') Forward Technology
         a.twitter(href='https://twitter.com/intent/tweet?via=forwardtek&text=Play massively multiplayer tetris with me http://bit.ly/metris #metris #nodeknockout')
           img(src='https://si0.twimg.com/images/dev/cms/intents/bird/bird_black/bird_32_black.png')
         iframe#vote(src='http://nodeknockout.com/iframe/forward', frameborder='0', scrolling='no', allowtransparency='true', width='115', height='25')
+        a(href='http://forwardtechnology.co.uk') Forward Technology
+        br
+        a(href='/leaderboard') Leaderboard
     script(type="text/javascript")
       var pusher_key = '#{pipe_key}';
     script(type="text/javascript", src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js")

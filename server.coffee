@@ -57,6 +57,11 @@ app.get '/game/:id', (req, res) ->
     redis.incr('game_count')
   res.render('game', {pipe_key: pusher_key, game: gameID})
 
+app.get '/leaderboard', (req, res) ->
+  redis.lrange 'scores', 0, -1, (err, scores) ->
+    console.log(scores)
+    res.render('leaderboard', {pipe_key: pusher_key, scores: scores.sort().reverse()})
+
 port = process.env.PORT || 8080
 app.listen port, ->
   console.log "Listening on " + port
@@ -158,7 +163,7 @@ pipe.channels.on 'event:blockAdded', (gameID, socketID, data) ->
   # console.log('sent score', game.grid.score)
 
   if (data.y <= 1)  #end of game
-
+    redis.lpush('scores', game.grid.score)
     pipe.channel(gameID).trigger('gameover', {})
     delete games[gameID]
     gameIDs.splice(gameIDs.indexOf(gameID), 1);
