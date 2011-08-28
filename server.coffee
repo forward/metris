@@ -51,16 +51,18 @@ app.get '/about', (req, res) ->
 app.get '/game/:id', (req, res) ->
   gameID = req.params.id
   if games[gameID] == undefined
-    games[gameID] = {
-      shapes: {},
-      grid: new Grid(160,24),
-      socketShapes: {},
-      intervalId: null,
-      twitterUsernames: {}
-    }
-    gameIDs.push(gameID)
-    redis.incr('game_count')
-  res.render('game', {pipe_key: pusher_key, game: gameID})
+    Grid.load gameID, (theGrid) ->
+      games[gameID] =
+        shapes: {}
+        grid: theGrid
+        socketShapes: {}
+        intervalId: null
+        twitterUsernames: {}
+      gameIDs.push(gameID)
+      redis.incr('game_count')
+    res.render('game', {pipe_key: pusher_key, game: gameID})
+  else
+    res.render('game', {pipe_key: pusher_key, game: gameID})
 
 app.get '/leaderboard', (req, res) ->
   redis.sort 'scores', 'limit', 0, 100, (err, scores) ->
@@ -74,24 +76,37 @@ app.listen port, ->
 #######################################################
 
 class Grid
-
-  constructor: (x,y) ->
+  @load: (gameID, cb) ->
+    redis.get gameID, (err, dataString) ->
+      console.log('LOAD', gameID, dataString)
+      grid = new Grid(gameID)
+      if dataString
+        data = JSON.parse(dataString)
+        grid.grid = data.grid
+        grid.score = data.score
+      cb(grid)
+  
+  constructor: (gameID) ->
+    @gameID = gameID
     @players = {}
     @score = 0
-    @width = x
-    @height = y
+    @width = 160
+    @height = 24
     @grid = []  #pay attention, grid[y][x] !!!
     for y in [0..@height]
       row = []
       for x in [0..@width]
         row[x] = 0
-
       @grid[y] = row
-
+  
+  save: ->
+    redis.set(@gameID, JSON.stringify(grid: @grid, score: @score))
+  
   add: (aBlock) ->
     # console.log('adding a block', aBlock.y, aBlock.x)
     @grid[aBlock.y][aBlock.x] = 1
     @score += 4 #add four points per block
+    @save()
 
   addPlayer: (socketId, twitterUsername) ->
     @players[socketId] = twitterUsername
@@ -118,7 +133,6 @@ class Grid
         if (@grid[y][x] == 1)
           blocks.push({x: x, y: y})
     blocks
-
 
   needsRefresh:  ->
     currentLine = @height
@@ -185,7 +199,7 @@ pipe.channels.on 'event:ready', (gameID, socketID, data) ->
   game = games[gameID]
   game.grid.addPlayer(socketID, data.twitterUsername)
   redis.incr('player_count')
-  pipe.socket(socketID).trigger('start', shapes:game.shapes, blocks:game.grid.blocks())
+  pipe.socket(socketID).trigger('start', shapes:game.shapes, blocks:game.grid.blocks(), score: game.grid.score)
   pipe.channel(gameID).trigger('players', {number: game.grid.numberOfPlayers()})
 
 pipe.sockets.on 'close', (socketID) ->

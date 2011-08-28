@@ -182,6 +182,7 @@ bindPusherEvents = ->
     shape.rotation = data.rotation
 
   pusher.back_channel.bind 'start', (info) ->
+    $('#score').html(info.score)
     for id, data of info.shapes
       shapeClass = Tetris.Shape.types[data.type]
       Tetris.gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, avatar: data.avatar) )

@@ -87,7 +87,6 @@ class window.Tetris.Shape
     maxWidth = 0
     for cords in @shapeDefinition(@rotation)
       maxWidth = cords[0] if cords[0] > maxWidth
-    console.log(@xShapeOffset())
     maxWidth - @xShapeOffset() + 1
     
   pixelWidth: ->
@@ -138,7 +137,6 @@ class window.Tetris.Shape
       Tetris.gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: Tetris.playerBlockColor, owned: true))
 
   created: ->
-    # console.log('creating a new piece')
     channel.trigger 'created',
       playerID: Tetris.playerID,
       x: @x,
