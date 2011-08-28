@@ -105,7 +105,7 @@ class Grid
 
   numberOfPlayers: ->
     Object.keys(@players).length
-    
+
   twitterUsers: ->
     users = []
     users.push(username) for socket, username of @players
@@ -137,8 +137,8 @@ class Grid
     line = []
     for x in [0..@width]
       line[x] = @grid[number][x]
-    line  
-  
+    line
+
   rowOfZeros: ->
     line = []
     for x in [0..@width]
@@ -160,8 +160,8 @@ pipe.channels.on 'event:moved', (gameID, socketID, data) ->
   pipe.channel(gameID).trigger('moved', data, socketID)
 
 pipe.channels.on 'event:removed', (gameID, socketID, data) ->
-  game = games[gameID]  
-  delete game.shapes[data.id]  
+  game = games[gameID]
+  delete game.shapes[data.id]
   pipe.channel(gameID).trigger('inFinalPosition', data)
 
 pipe.channels.on 'event:blockAdded', (gameID, socketID, data) ->
@@ -200,6 +200,11 @@ pipe.sockets.on 'close', (socketID) ->
   shapeID = game.socketShapes[socketID]
   delete game.shapes[shapeID]
   pipe.channel(theGameID).trigger('purge', {id:shapeID})
+
+  if game.grid.numberOfPlayers() == 0
+    if gameIDs.length > 4
+      delete games[theGameID]
+      gameIDs.splice(gameIDs.indexOf(theGameID), 1);
 
 pipe.on 'connected', ->
   setInterval (->
