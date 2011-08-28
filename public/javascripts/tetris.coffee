@@ -1,5 +1,6 @@
-window.pusher = new Pusher(pusher_key)
-window.channel = pusher.subscribe(gameID)
+if window.gameID
+  window.pusher = new Pusher(pusher_key)
+  window.channel = pusher.subscribe(gameID)
 
 window.makeGuid = ->
     S4 = () -> (((1+Math.random())*0x10000)|0).toString(16).substring(1)
@@ -64,6 +65,8 @@ window.Tetris =
       @gs.addEntity(@blocks)
       @map = new Map(0, Tetris.viewport.y*Tetris.gridSize+1, @blocks.blocks, @shapes)
       @gs.addEntity(@map)
+      bindPusherEvents()
+      bindPageGameEvents()
       channel.trigger 'ready'
       @gs.launch()
 
@@ -106,7 +109,6 @@ class Level
 
     c.beginPath()
     count = (Tetris.viewport.x)
-    console.log(count)
 
     for num in [0..Tetris.viewport.y]
       c.moveTo(0, Tetris.gridSize * num)
@@ -153,85 +155,84 @@ class Tetris.Block
     c.fillStyle = Tetris.abandonedBlockColor
     c.fillRect(vs.x, vs.y, Tetris.blockSize, Tetris.blockSize)
 
-
-channel.bind 'created', (data) ->
-  return if data.playerID is Tetris.playerID
-  shapeClass = Tetris.Shape.types[data.type]
-  console.log(data.avatar)
-  Tetris.gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, avatar: data.avatar) )
-
-channel.bind 'moved', (data) ->
-  return if data.playerID is Tetris.playerID
-  shape = Tetris.shapes[data.id]
-  return unless shape?
-  shape.x = data.x
-  shape.y = data.y
-  shape.rotation = data.rotation
-
-pusher.back_channel.bind 'start', (info) ->
-  for id, data of info.shapes
+bindPusherEvents = ->
+  channel.bind 'created', (data) ->
+    return if data.playerID is Tetris.playerID
     shapeClass = Tetris.Shape.types[data.type]
     Tetris.gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, avatar: data.avatar) )
-  for block in info.blocks
-    Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
-  Tetris.gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: Tetris.playerBlockColor, owned: true))
 
-channel.bind 'refreshLines', (blocks) ->
-  Tetris.blocks.reset()
-  Tetris.am.play 'line-completed' unless Tetris.sfxMuted
-  for block in blocks
-    Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
+  channel.bind 'moved', (data) ->
+    return if data.playerID is Tetris.playerID
+    shape = Tetris.shapes[data.id]
+    return unless shape?
+    shape.x = data.x
+    shape.y = data.y
+    shape.rotation = data.rotation
 
-channel.bind 'purge', (data) ->
-  shape = Tetris.shapes[data.id]
-  shape.remove()
+  pusher.back_channel.bind 'start', (info) ->
+    for id, data of info.shapes
+      shapeClass = Tetris.Shape.types[data.type]
+      Tetris.gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, avatar: data.avatar) )
+    for block in info.blocks
+      Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
+    Tetris.gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: Tetris.playerBlockColor, owned: true))
 
-channel.bind 'inFinalPosition', (data) ->
-  return if data.playerID is Tetris.playerID
-  shape = Tetris.shapes[data.id]
-  shape.x = data.x
-  shape.y = data.y
-  shape.rotation = data.rotation
-  shape.shapeInFinalPosition()
+  channel.bind 'refreshLines', (blocks) ->
+    Tetris.blocks.reset()
+    Tetris.am.play 'line-completed' unless Tetris.sfxMuted
+    for block in blocks
+      Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
 
-channel.bind 'drop', ->
-  for id, data of Tetris.shapes
-    Tetris.shapes[id].drop()
+  channel.bind 'purge', (data) ->
+    shape = Tetris.shapes[data.id]
+    shape.remove()
 
-channel.bind 'gameover', ->
-  Tetris.am.play 'gameover' unless Tetris.sfxMuted
-  score = $('#score').html()
-  $('#wrapper').append('<div id="gameover"><h2>Game Over</h2><p>You scored: <span>'+
-                        score +
-                        '</span></p><p><a class="tweet" href="https://twitter.com/intent/tweet?via=forwardtek&text=I scored '+
-                        score +
-                        ' at Metris http://bit.ly/metris #metris #nodeknockout">Tweet it</a> or '+
-                        '<a href="/">start over</a></p></div>')
+  channel.bind 'inFinalPosition', (data) ->
+    return if data.playerID is Tetris.playerID
+    shape = Tetris.shapes[data.id]
+    shape.x = data.x
+    shape.y = data.y
+    shape.rotation = data.rotation
+    shape.shapeInFinalPosition()
 
-channel.bind 'scoreUpdate', (data) ->
-  $('#score').html(data.score)
+  channel.bind 'drop', ->
+    for id, data of Tetris.shapes
+      Tetris.shapes[id].drop()
 
-channel.bind 'players', (data) ->
-  if (data.number == 1)
-    text = " player online"
-  else
-    text = " players online"
-  $('#playerNumber').html(data.number+text)
+  channel.bind 'gameover', ->
+    Tetris.am.play 'gameover' unless Tetris.sfxMuted
+    score = $('#score').html()
+    $('#wrapper').append('<div id="gameover"><h2>Game Over</h2><p>You scored: <span>'+
+                          score +
+                          '</span></p><p><a class="tweet" href="https://twitter.com/intent/tweet?via=forwardtek&text=I scored '+
+                          score +
+                          ' at Metris http://bit.ly/metris #metris #nodeknockout">Tweet it</a> or '+
+                          '<a href="/">start over</a></p></div>')
 
-channel.bind 'blockAdded', (data) ->
-  return if data.playerID is Tetris.playerID
-  Tetris.blocks.add(new Tetris.Block(x:data.x, y:data.y), false)
+  channel.bind 'scoreUpdate', (data) ->
+    $('#score').html(data.score)
 
-$('.control#left').click ->   Tetris.gs.entitiesCall('keyDown_37')
-$('.control#right').click ->  Tetris.gs.entitiesCall('keyDown_39')
-$('.control#down').click ->   Tetris.gs.entitiesCall('keyDown_40')
-$('.control#rotate').click -> Tetris.gs.entitiesCall('keyDown_38')
+  channel.bind 'players', (data) ->
+    if (data.number == 1)
+      text = " player online"
+    else
+      text = " players online"
+    $('#playerNumber').html(data.number+text)
 
-$('#sound-fx-toggle').click ->
-  toggle = $('#sound-fx-toggle')
-  if toggle.hasClass('toggle-off') then toggle.removeClass('toggle-off') else toggle.addClass('toggle-off')
-  Tetris.toggleSfxMute()
-  console.log(Tetris.sfxMuted)
+  channel.bind 'blockAdded', (data) ->
+    return if data.playerID is Tetris.playerID
+    Tetris.blocks.add(new Tetris.Block(x:data.x, y:data.y), false)
+
+bindPageGameEvents = ->
+  $('.control#left').click ->   Tetris.gs.entitiesCall('keyDown_37')
+  $('.control#right').click ->  Tetris.gs.entitiesCall('keyDown_39')
+  $('.control#down').click ->   Tetris.gs.entitiesCall('keyDown_40')
+  $('.control#rotate').click -> Tetris.gs.entitiesCall('keyDown_38')
+
+  $('#sound-fx-toggle').click ->
+    toggle = $('#sound-fx-toggle')
+    if toggle.hasClass('toggle-off') then toggle.removeClass('toggle-off') else toggle.addClass('toggle-off')
+    Tetris.toggleSfxMute()
 
 gameStart = ->
   $('#score').show()
