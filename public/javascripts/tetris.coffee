@@ -33,6 +33,8 @@ window.startTetris = (gs) ->
       if rightDiff <= 2 and (@viewportOffset.x+@viewport.x) < @levelSize
         @viewportOffset.x += 1
     init: ->
+      # random viewport starting position
+      @viewportOffset.x = Math.floor(Math.random() * (@levelSize - @viewport.x))
       @height = @viewport.y
       level = new Level()
       gs.addEntity(level)

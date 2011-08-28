@@ -151,4 +151,4 @@ pipe.on 'connected', ->
   setInterval (->
     for gameID in gameIDs
       pipe.channel(gameID).trigger('drop', {})
-  ), 200
+  ), 300
