@@ -38,7 +38,7 @@ window.Tetris =
       @viewportOffset.x += 1
   loadAvatar: (callback) ->
     return callback() unless @twitterUsername
-    @avatar = "http://api.twitter.com/1/users/profile_image?screen_name=#{@twitterUsername}&size=mini"
+    @avatar = "http://api.twitter.com/1/users/profile_image?screen_name=#{@twitterUsername}&size=normal"
     @avatarImage = new Image()
     @avatarImage.onload = => callback(@avatarImage)
     @avatarImage.onerror = =>

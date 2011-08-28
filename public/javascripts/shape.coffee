@@ -66,19 +66,60 @@ class window.Tetris.Shape
   
   draw: (c) ->
     drawBlock = (blockDef) =>
-      x = (@x*Tetris.gridSize) + (blockDef[0]*Tetris.gridSize) + 1
-      y = (@y*Tetris.gridSize) + (blockDef[1]*Tetris.gridSize) + 1
+      x = @pixelX() + (blockDef[0]*Tetris.gridSize) + 1
+      y = @pixelY() + (blockDef[1]*Tetris.gridSize) + 1
       vs = Tetris.viewportSpace(x,y)
       return unless vs.visible
       c.fillStyle = @colorString()
       c.fillRect(vs.x, vs.y, Tetris.blockSize, Tetris.blockSize)
-      c.drawImage(@avatarImage, vs.x, vs.y, Tetris.blockSize, Tetris.blockSize) if @avatarImage
     definition = @shapeDefinition(this.rotation)
     drawBlock(definition[0])
     drawBlock(definition[1])
     drawBlock(definition[2])
     drawBlock(definition[3])
+    if @avatarImage
+      imgWidth = 48
+      v = Tetris.viewportSpace(@pixelX()+(@xShapeOffset()*Tetris.gridSize)+((@pixelWidth()/2) - (imgWidth/2)), @pixelY()-75)
+      c.setAlpha(0.5)
+      c.drawImage(@avatarImage, v.x, v.y, imgWidth, imgWidth)
+  
+  width: ->
+    maxWidth = 0
+    for cords in @shapeDefinition(@rotation)
+      maxWidth = cords[0] if cords[0] > maxWidth
+    console.log(@xShapeOffset())
+    maxWidth - @xShapeOffset() + 1
+    
+  pixelWidth: ->
+    @width() * Tetris.gridSize
+    
+  height: ->
+    maxHeight = 0
+    for cords in @shapeDefinition(@rotation)
+      maxHeight = cords[1] if cords[1] > maxHeight
+    maxHeight - @yShapeOffset() + 1
+    
+  pixelHeight: ->
+    @height() * Tetris.gridSize
+  
+  xShapeOffset: ->
+    min = 4
+    for cords in @shapeDefinition(@rotation)
+      min = cords[0] if cords[0] < min
+    min
+    
+  yShapeOffset: ->
+    min = 4
+    for cords in @shapeDefinition(@rotation)
+      min = cords[1] if cords[1] < min
+    min
 
+  
+  pixelX: ->
+    @x * Tetris.gridSize
+  pixelY: ->
+    @y * Tetris.gridSize
+  
   drop: ->
     if @canMoveDown()
       @y++
