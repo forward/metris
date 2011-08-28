@@ -44,6 +44,10 @@ app.get '/', (req, res) ->
     redis.get 'game_count', (err, gameCount) ->
       res.render('index', {pipe_key: pusher_key, games: games, newGame: newGame, gameCount: gameCount, playerCount: playerCount})
 
+app.get '/about', (req, res) ->
+  res.render('about', {layout: false})
+
+
 app.get '/game/:id', (req, res) ->
   gameID = req.params.id
   if games[gameID] == undefined

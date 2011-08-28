@@ -1,0 +1,62 @@
+!!! 5
+html(lang="en")
+  head
+    title Metris
+    link(rel="stylesheet", type="text/css", href="/stylesheets/tetris.css")
+    meta(content='width=device-width, initial-scale=1, maximum-scale=1', name='viewport')
+    meta(name="apple-mobile-web-app-capable", content="yes")
+    meta(name="apple-mobile-web-app-status-bar-style", content="black")
+  body
+    #wrapper
+      h1
+        a(href='/') Metris - About 
+      
+      p
+        a(href='/') Home Page
+          
+      p A massively multiplayer Tetris game
+      
+      p 
+        span Built during the 
+        a(href='http://nodeknockout.com/') Node.js KO 2011
+        span &nbsp;by the Forward team
+        
+      ul.team 
+        li 
+          img(src='/images/andrew.jpeg')
+          span Andrew Nesbitt
+        li 
+          img(src='/images/baris.jpeg')
+          span Baris Balic
+        li 
+          img(src='/images/filippo.jpeg')
+          span Filippo Diotalevi
+        li 
+          img(src='/images/andy.jpeg')
+          span Andy Kent
+          
+      p Don't forget to vote for Metris 
+        a(href='http://nodeknockout.com/teams/forward') here!
+        br
+        br
+
+      footer
+        a.twitter(href='https://twitter.com/intent/tweet?via=forwardtek&text=Play massively multiplayer tetris with me http://bit.ly/metris #metris #nodeknockout')
+          img(src='https://si0.twimg.com/images/dev/cms/intents/bird/bird_black/bird_32_black.png')
+        iframe#vote(src='http://nodeknockout.com/iframe/forward', frameborder='0', scrolling='no', allowtransparency='true', width='115', height='25')
+        a(href='http://forwardtechnology.co.uk') Forward Technology
+        br
+        a(href='/leaderboard') Leaderboard
+
+
+    script(type="text/javascript", src="http://platform.twitter.com/widgets.js")
+    script(type="text/javascript")
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-25371622-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
