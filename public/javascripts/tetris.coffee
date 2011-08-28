@@ -50,7 +50,7 @@ window.Tetris =
     @sfxMuted = !@sfxMuted
   init: (options) ->
     @twitterUsername = options.twitterUsername
-    @loadAvatar => 
+    @loadAvatar =>
       @gs = new JSGameSoup(document.getElementById('tetris'), 25) # framerate
       @am = new AudioManager()
       @am.load '/sounds/block-placed.wav', 'block-placed'
@@ -120,7 +120,7 @@ class Level
       c.lineTo(Tetris.gridSize * num, Tetris.viewport.y*Tetris.gridSize)
       c.strokeStyle = "#F0DFE3"
       c.stroke()
-    
+
 class Tetris.AbandonedBlocks
   constructor: ->
     @blocks = []
@@ -230,8 +230,7 @@ bindPageGameEvents = ->
   $('.control#rotate').click -> Tetris.gs.entitiesCall('keyDown_38')
 
   $('#sound-fx-toggle').click ->
-    toggle = $('#sound-fx-toggle')
-    if toggle.hasClass('toggle-off') then toggle.removeClass('toggle-off') else toggle.addClass('toggle-off')
+    $('#sound-fx-toggle').toggleClass('toggle-off')
     Tetris.toggleSfxMute()
 
 gameStart = ->
