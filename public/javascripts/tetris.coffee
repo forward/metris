@@ -234,6 +234,14 @@ window.startTetris = (gs) ->
       @x--
       @moved()
 
+    # DOWN
+    keyDown_40: ->
+      return unless @owned
+      return unless @canMoveTo(0,2)
+      @y++
+      @y++
+      @moved()      
+
     # UP
     keyDown_38: ->
       return unless @owned
