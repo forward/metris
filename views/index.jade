@@ -24,8 +24,13 @@ ul#games
         ul.players
           - for(twitterUsername in games[game].grid.twitterUsers()){
             li
-              a(href="http://twitter.com/#{games[game].grid.twitterUsers()[twitterUsername]}")
-                img(src="http://api.twitter.com/1/users/profile_image?screen_name=#{games[game].grid.twitterUsers()[twitterUsername]}&size=mini", alt=games[game].grid.twitterUsers()[twitterUsername])
+              - if(username = games[game].grid.twitterUsers()[twitterUsername]){
+                a(href="http://twitter.com/#{username}")
+                  img(src="http://api.twitter.com/1/users/profile_image?screen_name=#{username}&size=mini", alt=username)
+              - } else {
+                a(href="http://twitter.com/forwardtek")
+                  img(src="http://api.twitter.com/1/users/profile_image?screen_name=forwardtek&size=mini", alt='Unkown User')
+              - }
           - }
     - }
   - }
