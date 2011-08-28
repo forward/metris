@@ -7,13 +7,15 @@ p
 
 ul#games
   - for(game in games){
-    li
-      a(href='/game/#{game}')
-        | Players:
-        = games[game].grid.players.length
-        \ -
-        |Score:
-        = games[game].grid.score
+    - if (games[game].grid.players.length < 11){
+      li
+        a(href='/game/#{game}')
+          | Players:
+          = games[game].grid.players.length
+          \ -
+          |Score:
+          = games[game].grid.score
+    - }
   - }
 
 p
