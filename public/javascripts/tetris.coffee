@@ -201,33 +201,19 @@ channel.bind 'blockAdded', (data) ->
   return if data.playerID is Tetris.playerID
   Tetris.blocks.add(new Tetris.Block(x:data.x, y:data.y), false)
 
-<<<<<<< HEAD
+$('.control#left').click ->   Tetris.gs.entitiesCall('keyDown_37')
+$('.control#right').click ->  Tetris.gs.entitiesCall('keyDown_39')
+$('.control#down').click ->   Tetris.gs.entitiesCall('keyDown_40')
+$('.control#rotate').click -> Tetris.gs.entitiesCall('keyDown_38')
 
-$('a.start-game').click ->
+gameStart = ->
   $('#score').show()
   $('#playerNumber').show()
   $('#intro').hide()
-  Tetris.init()
+  username = $('#username-input').val()
+  username = null unless username.length > 0
+  Tetris.init(twitterUsername: username)
   false
-
-  $('.control#left').click ->
-    Tetris.gs.entitiesCall 'keyDown_37'
-  $('.control#right').click ->
-    Tetris.gs.entitiesCall 'keyDown_39'
-  $('.control#down').click ->
-    Tetris.gs.entitiesCall 'keyDown_40'
-  $('.control#rotate').click ->
-    Tetris.gs.entitiesCall 'keyDown_38'
-=======
-gameStart = ->
-    $('#score').show()
-    $('#playerNumber').show()
-    $('#intro').hide()
-    username = $('#username-input').val()
-    username = null unless username.length > 0
-    Tetris.init(twitterUsername: username)
-    false
 
 $('a.start-game').click(gameStart)
 $('#intro form').submit(gameStart)
->>>>>>> avatars!
