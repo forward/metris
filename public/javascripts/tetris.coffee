@@ -189,6 +189,8 @@ channel.bind 'blockAdded', (data) ->
 
 
 $('a.start-game').click ->
+  $('#score').show()
+  $('#playerNumber').show()
   $('#intro').hide()
   Tetris.init()
   false
