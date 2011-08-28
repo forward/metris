@@ -104,6 +104,23 @@ class Level
     c.strokeStyle = "#bbb"
     c.stroke()
 
+    c.beginPath()
+    count = (Tetris.viewport.x)
+    console.log(count)
+    # for num in
+    for num in [0..Tetris.viewport.y]
+      c.moveTo(0, Tetris.gridSize * num)
+      c.lineTo(Tetris.viewport.x*Tetris.gridSize, Tetris.gridSize * num)
+      c.strokeStyle = "#E6CCD3"
+      c.stroke()
+    for num in [0..Tetris.viewport.x]
+      c.moveTo(Tetris.gridSize * num, 0)
+      c.lineTo(Tetris.gridSize * num, Tetris.viewport.y*Tetris.gridSize)
+      c.strokeStyle = "#E6CCD3"
+      c.stroke()
+    
+    # Tetris.blocksize
+
 class Tetris.AbandonedBlocks
   constructor: ->
     @blocks = []
@@ -184,7 +201,7 @@ channel.bind 'drop', ->
     Tetris.shapes[id].drop()
 
 channel.bind 'gameover', ->
-  Tetris.am.play 'gameover'
+  Tetris.am.play 'gameover' unless Tetris.sfxMuted
   score = $('#score').html()
   $('#wrapper').append('<div id="gameover"><h2>Game Over</h2><p>You scored: <span>'+
                         score +
