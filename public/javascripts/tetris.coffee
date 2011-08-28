@@ -20,6 +20,12 @@ window.startTetris = (gs) ->
       x: 0
       y: 0
     shapes: {}
+    colors: []
+    playerBlockColor:
+      h: Math.floor(Math.random()*360)
+      s:'60%'
+      l:'50%'
+    abandonedBlockColor: "#FF0080"
     playerID: makeGuid()
     viewportSpace: (x,y) ->
       ret = {x: x-(@viewportOffset.x*@gridSize), y: y-(@viewportOffset.y*@gridSize)}
@@ -56,9 +62,9 @@ window.startTetris = (gs) ->
       for id, shape of @shapes
         for i in [0,1,2,3]
           block = shape.blockPosition(i)
-          @drawBlock(c, block.x, block.y, '#FF6FCF')
+          @drawBlock(c, block.x, block.y, shape.colorString())
     drawBlocks: (c) ->
-      @drawBlock(c, block.x, block.y, "#FF0080") for block in @blocks
+      @drawBlock(c, block.x, block.y, Tetris.abandonedBlockColor) for block in @blocks
     drawBlock: (c, x, y, color) ->
       c.fillStyle = color
       x = @x + (@gridSize * x)
@@ -113,7 +119,7 @@ window.startTetris = (gs) ->
     draw: (c) ->
       vs = Tetris.viewportSpace(@x*Tetris.gridSize+1, @y*Tetris.gridSize+1)
       return unless vs.visible
-      c.fillStyle = "#FF6FCF"
+      c.fillStyle = Tetris.abandonedBlockColor
       c.fillRect(vs.x, vs.y, Tetris.blockSize, Tetris.blockSize)
 
 
@@ -162,17 +168,21 @@ window.startTetris = (gs) ->
         return false if x >= Tetris.levelSize
         return false if y >= Tetris.viewport.y
       return true
-
+    
+    colorString: ->
+      alpha = if @owned then 1 else 0.4
+      if @color.r?
+        "rgba(#{@color.r},#{@color.g},#{@color.b},#{alpha})"
+      else
+        "hsla(#{@color.h},#{@color.s},#{@color.l},#{alpha})"
+    
     draw: (c) ->
-      rgba = (o, alpha=1) ->
-        "rgba(#{o.r},#{o.g},#{o.b},#{alpha})"
       drawBlock = (blockDef) =>
         x = (@x*Tetris.gridSize) + (blockDef[0]*Tetris.gridSize) + 1
         y = (@y*Tetris.gridSize) + (blockDef[1]*Tetris.gridSize) + 1
-        alpha = if @owned then 1 else 0.4
         vs = Tetris.viewportSpace(x,y)
         return unless vs.visible
-        c.fillStyle = rgba(@color, alpha)
+        c.fillStyle = @colorString()
         c.fillRect(vs.x, vs.y, Tetris.blockSize, Tetris.blockSize)
       definition = @shapeDefinition(this.rotation)
       drawBlock(definition[0])
@@ -194,7 +204,7 @@ window.startTetris = (gs) ->
       Tetris.blocks.add(new Tetris.Block(@blockPosition(3)))
       @remove()
       if @owned
-        gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: {r:0, g:0, b:0}, owned: true))
+        gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: Tetris.playerBlockColor, owned: true))
 
     created: ->
       # console.log('creating a new piece')
@@ -342,7 +352,7 @@ window.startTetris = (gs) ->
       gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color) )
     for block in info.blocks
       Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
-    gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: {r:0, g:0, b:0}, owned: true))
+    gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: Tetris.playerBlockColor, owned: true))
 
   channel.bind 'refreshLines', (blocks) ->
     Tetris.blocks.reset()
