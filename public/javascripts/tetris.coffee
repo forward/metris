@@ -38,6 +38,9 @@ window.Tetris =
       @viewportOffset.x += 1
   init: ->
     @gs = new JSGameSoup(document.getElementById('tetris'), 40) # framerate
+    @am = new AudioManager()
+    @am.load '/sounds/block-placed.wav', 'block-placed'
+    @am.load '/sounds/line-completed.wav', 'line-completed'
     # random viewport starting position
     @viewportOffset.x = Math.floor(Math.random() * (@levelSize - @viewport.x))
     @height = @viewport.y
@@ -145,6 +148,7 @@ pusher.back_channel.bind 'start', (info) ->
 
 channel.bind 'refreshLines', (blocks) ->
   Tetris.blocks.reset()
+  Tetris.am.play 'line-completed'
   for block in blocks
     Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
 
