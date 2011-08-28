@@ -168,10 +168,9 @@ class Tetris.StaticMiniMap
     y = @gridSize * y
     @canvas.fillRect(x, y, @gridSize, @gridSize)
   drawBounds: ->
-    @canvas.strokeStyle = "#bbb"
-    @canvas.fillStyle = "rgba(255,255,255,0.5)"
-    @canvas.fillRect(0, 0, 320, 48)
-    @canvas.strokeRect(0, 0, 320, 48)
+    # @canvas.fillStyle = "rgba(255,255,255,0.5)"
+    # @canvas.fillRect(0, 0, 320, 48)
+    # @canvas.strokeRect(0, 0, 320, 48)
 
 bindPusherEvents = ->
   channel.bind 'created', (data) ->
