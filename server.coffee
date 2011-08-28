@@ -60,13 +60,12 @@ app.get '/game/:id', (req, res) ->
         twitterUsernames: {}
       gameIDs.push(gameID)
       redis.incr('game_count')
-    res.render('game', {pipe_key: pusher_key, game: gameID})
+      res.render('game', {pipe_key: pusher_key, game: gameID, grid: games[gameID].grid})
   else
-    res.render('game', {pipe_key: pusher_key, game: gameID})
+    res.render('game', {pipe_key: pusher_key, game: gameID, grid: games[gameID].grid})
 
 app.get '/leaderboard', (req, res) ->
   redis.sort 'scores', 'limit', 0, 100, (err, scores) ->
-    console.log(scores)
     res.render('leaderboard', {pipe_key: pusher_key, scores: scores.reverse()})
 
 port = process.env.PORT || 8080
@@ -78,12 +77,13 @@ app.listen port, ->
 class Grid
   @load: (gameID, cb) ->
     redis.get gameID, (err, dataString) ->
-      console.log('LOAD', gameID, dataString)
       grid = new Grid(gameID)
       if dataString
         data = JSON.parse(dataString)
         grid.grid = data.grid
         grid.score = data.score
+        grid.ended = data.ended
+        console.log("END", data.ended)
       cb(grid)
   
   constructor: (gameID) ->
@@ -93,6 +93,7 @@ class Grid
     @width = 160
     @height = 24
     @grid = []  #pay attention, grid[y][x] !!!
+    @ended = false
     for y in [0..@height]
       row = []
       for x in [0..@width]
@@ -100,10 +101,13 @@ class Grid
       @grid[y] = row
   
   save: ->
-    redis.set(@gameID, JSON.stringify(grid: @grid, score: @score))
+    redis.set(@gameID, JSON.stringify(grid: @grid, score: @score, ended: @ended))
+  
+  gameEnded: ->
+    @ended = true
+    @save()
   
   add: (aBlock) ->
-    # console.log('adding a block', aBlock.y, aBlock.x)
     @grid[aBlock.y][aBlock.x] = 1
     @score += 4 #add four points per block
     @save()
@@ -192,6 +196,7 @@ pipe.channels.on 'event:blockAdded', (gameID, socketID, data) ->
   if (data.y <= 1)  #end of game
     redis.lpush('scores', game.grid.score)
     pipe.channel(gameID).trigger('gameover', {})
+    game.grid.gameEnded()
     delete games[gameID]
     gameIDs.splice(gameIDs.indexOf(gameID), 1);
 
@@ -201,7 +206,7 @@ pipe.channels.on 'event:ready', (gameID, socketID, data) ->
   redis.incr('player_count')
   pipe.socket(socketID).trigger('start', shapes:game.shapes, blocks:game.grid.blocks(), score: game.grid.score)
   pipe.channel(gameID).trigger('players', {number: game.grid.numberOfPlayers()})
-
+  
 pipe.sockets.on 'close', (socketID) ->
   theGameID = null
   for gameID in gameIDs

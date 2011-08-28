@@ -45,6 +45,7 @@ window.Tetris =
   toggleSfxMute: ->
     @sfxMuted = !@sfxMuted
   init: (options) ->
+    @playable = options.playable
     window.pusher = new Pusher(pusher_key)
     window.channel = pusher.subscribe(gameID)
     @twitterUsername = options.twitterUsername
@@ -188,7 +189,8 @@ bindPusherEvents = ->
       Tetris.gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color, avatar: data.avatar) )
     for block in info.blocks
       Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
-    Tetris.gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: Tetris.playerBlockColor, owned: true))
+    if Tetris.playable
+      Tetris.gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: Tetris.playerBlockColor, owned: true))
 
   channel.bind 'refreshLines', (blocks) ->
     Tetris.blocks.reset()
@@ -252,10 +254,15 @@ gameStart = ->
   $('#sound-fx-toggle').show()
   $('#intro').hide()
   username = $('#username-input').val()
-  username = null unless username.length > 0
-  Tetris.init(twitterUsername: username)
+  username = null unless username and username.length > 0
+  Tetris.init(twitterUsername: username, playable: window.playable)
   false
 
+
+
 $ ->
-  $('a.start-game').click(gameStart)
-  $('#intro form').submit(gameStart)
+  if window.playable
+    $('a.start-game').click(gameStart)
+    $('#intro form').submit(gameStart)
+  else
+    gameStart()

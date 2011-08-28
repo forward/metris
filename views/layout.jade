@@ -6,6 +6,8 @@ html(lang="en")
     meta(content='width=device-width, initial-scale=1, maximum-scale=1', name='viewport')
     meta(name="apple-mobile-web-app-capable", content="yes")
     meta(name="apple-mobile-web-app-status-bar-style", content="black")
+    script(type="text/javascript")
+      var pusher_key = '#{pipe_key}';
     script(type="text/javascript", src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js")
     script(type="text/javascript", src="http://js.pusherapp.com/1.10.1-pre/pusher.min.js")
     script(type="text/javascript", src="/javascripts/gamesoup/jsgamesoup.js")
@@ -35,5 +37,3 @@ html(lang="en")
         a(href='http://forwardtechnology.co.uk') Forward Technology
         br
         a(href='/leaderboard') Leaderboard
-    script(type="text/javascript")
-      var pusher_key = '#{pipe_key}';
