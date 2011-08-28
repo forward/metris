@@ -69,6 +69,7 @@ class Grid
   add: (aBlock) ->
     # console.log('adding a block', aBlock.y, aBlock.x)
     @grid[aBlock.y][aBlock.x] = 1
+    @score += 4 #add four points per block
 
   blocks: ->
     blocks = []
@@ -80,19 +81,17 @@ class Grid
 
 
   needsRefresh:  ->
-    @score = 0
     currentLine = @height
     completedRows = 0
     newGrid = []
     for y in [@height..0]
       sum = @grid[y].reduce (a, b) -> a + b
-      @score += sum
       if sum < @width
         newGrid[currentLine] = @grid[y]
         currentLine -= 1
       else
         completedRows++
-        @score += sum #double the score for a line
+        @score += (4*@width) #double the score for a line
 
     if (completedRows > 0)
       for line in [0..completedRows-1]
