@@ -375,8 +375,14 @@ window.startTetris = (gs) ->
     for id, data of Tetris.shapes
       Tetris.shapes[id].drop()
 
-  channel.bind 'endOfGame', ->
-    console.log("THE END!")
+  channel.bind 'gameover', ->
+    score = $('#score').html()
+    $('#wrapper').append('<div id="gameover"><h2>Game Over</h2><p>You scored: <span>'+
+                          score +
+                          '</span></p><p><a class="tweet" href="https://twitter.com/intent/tweet?via=forwardtek&text=I scored '+
+                          score +
+                          ' at Metris http://bit.ly/metris #metris #nodeknockout">Tweet it</a> or '+
+                          '<a href="/">start over</a></p></div>')
 
   channel.bind 'scoreUpdate', (data) ->
     $('#score').html(data.score)

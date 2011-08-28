@@ -147,7 +147,7 @@ pipe.channels.on 'event:blockAdded', (gameID, socketID, data) ->
   # console.log('sent score', game.grid.score)
 
   if (data.y <= 1)  #end of game
-    pipe.channel(gameID).trigger('endOfGame')
+    pipe.channel(gameID).trigger('gameover', {})
     delete games[gameID]
     gameIDs.splice(gameIDs.indexOf(gameID), 1);
 
