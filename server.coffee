@@ -14,6 +14,14 @@ pipe = Pipe.createClient
 pipe.connect()
 # pipe.debug = true
 
+if process.env.REDISTOGO_URL
+  rtg   = require("url").parse(process.env.REDISTOGO_URL);
+  redis = require("redis").createClient(rtg.port, rtg.hostname);
+
+  redis.auth(rtg.auth.split(":")[1]);
+else
+  redis = require("redis").createClient()
+
 makeGuid = ->
     S4 = () -> (((1+Math.random())*0x10000)|0).toString(16).substring(1)
     (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4())
@@ -32,7 +40,9 @@ app.configure ->
 
 app.get '/', (req, res) ->
   newGame = makeGuid()
-  res.render('index', {pipe_key: pusher_key, games: games, newGame: newGame})
+  redis.get 'player_count', (err, playerCount) ->
+    redis.get 'game_count', (err, gameCount) ->
+      res.render('index', {pipe_key: pusher_key, games: games, newGame: newGame, gameCount: gameCount, playerCount: playerCount})
 
 app.get '/game/:id', (req, res) ->
   gameID = req.params.id
@@ -44,6 +54,7 @@ app.get '/game/:id', (req, res) ->
       intervalId: null
     }
     gameIDs.push(gameID)
+    redis.incr('game_count')
   res.render('game', {pipe_key: pusher_key, game: gameID})
 
 port = process.env.PORT || 8080
@@ -147,6 +158,7 @@ pipe.channels.on 'event:blockAdded', (gameID, socketID, data) ->
   # console.log('sent score', game.grid.score)
 
   if (data.y <= 1)  #end of game
+
     pipe.channel(gameID).trigger('gameover', {})
     delete games[gameID]
     gameIDs.splice(gameIDs.indexOf(gameID), 1);
@@ -154,6 +166,7 @@ pipe.channels.on 'event:blockAdded', (gameID, socketID, data) ->
 pipe.channels.on 'event:ready', (gameID, socketID, data) ->
   game = games[gameID]
   game.grid.addPlayer(socketID)
+  redis.incr('player_count')
   pipe.socket(socketID).trigger('start', shapes:game.shapes, blocks:game.grid.blocks())
   pipe.channel(gameID).trigger('players', {number: game.grid.numberOfPlayers()})
 
