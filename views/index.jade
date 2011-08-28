@@ -15,8 +15,11 @@ ul#games
           \ -
           |Score:
           = games[game].grid.score
+          canvas.mini-map(id="game-map-#{game}", width="320", height="48")
+          script(type="text/javascript")
+            new Tetris.StaticMiniMap("game-map-#{game}", !{JSON.stringify(games[game].grid.blocks())});
     - }
   - }
 
 p
-  a(href="/game/#{newGame}") Start a new game
+  a.new-game(href="/game/#{newGame}") Start a new game

@@ -1,7 +1,3 @@
-if window.gameID
-  window.pusher = new Pusher(pusher_key)
-  window.channel = pusher.subscribe(gameID)
-
 window.makeGuid = ->
     S4 = () -> (((1+Math.random())*0x10000)|0).toString(16).substring(1)
     (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4())
@@ -49,26 +45,29 @@ window.Tetris =
   toggleSfxMute: ->
     @sfxMuted = !@sfxMuted
   init: (options) ->
+    window.pusher = new Pusher(pusher_key)
+    window.channel = pusher.subscribe(gameID)
     @twitterUsername = options.twitterUsername
-    @loadAvatar =>
-      @gs = new JSGameSoup(document.getElementById('tetris'), 25) # framerate
-      @am = new AudioManager()
-      @am.load '/sounds/block-placed.wav', 'block-placed'
-      @am.load '/sounds/line-completed.wav', 'line-completed'
-      @am.load '/sounds/gameover.wav', 'gameover'
-      # random viewport starting position
-      @viewportOffset.x = Math.floor(Math.random() * (@levelSize - @viewport.x))
-      @height = @viewport.y
-      level = new Level()
-      @gs.addEntity(level)
-      @blocks = new Tetris.AbandonedBlocks()
-      @gs.addEntity(@blocks)
-      @map = new Map(0, Tetris.viewport.y*Tetris.gridSize+1, @blocks.blocks, @shapes)
-      @gs.addEntity(@map)
-      bindPusherEvents()
-      bindPageGameEvents()
-      channel.trigger 'ready'
-      @gs.launch()
+    pusher.connection.bind 'connected', =>
+      @loadAvatar => 
+        @gs = new JSGameSoup(document.getElementById('tetris'), 25) # framerate
+        @am = new AudioManager()
+        @am.load '/sounds/block-placed.wav', 'block-placed'
+        @am.load '/sounds/line-completed.wav', 'line-completed'
+        @am.load '/sounds/gameover.wav', 'gameover'
+        # random viewport starting position
+        @viewportOffset.x = Math.floor(Math.random() * (@levelSize - @viewport.x))
+        @height = @viewport.y
+        level = new Level()
+        @gs.addEntity(level)
+        @blocks = new Tetris.AbandonedBlocks()
+        @gs.addEntity(@blocks)
+        @map = new Map(0, Tetris.viewport.y*Tetris.gridSize+1, @blocks.blocks, @shapes)
+        @gs.addEntity(@map)
+        bindPusherEvents()
+        bindPageGameEvents()
+        channel.trigger 'ready'
+        @gs.launch()
 
 class Map
   constructor: (@x, @y, @blocks, @shapes) ->
@@ -154,6 +153,25 @@ class Tetris.Block
     return unless vs.visible
     c.fillStyle = Tetris.abandonedBlockColor
     c.fillRect(vs.x, vs.y, Tetris.blockSize, Tetris.blockSize)
+    
+class Tetris.StaticMiniMap
+  constructor: (@id, @blocks) ->
+    @canvas = document.getElementById(@id).getContext('2d')
+    @gridSize = 2
+    @draw()
+  draw: ->
+    @drawBlock(block.x, block.y, Tetris.abandonedBlockColor) for block in @blocks
+    @drawBounds()
+  drawBlock: (x, y, color) ->
+    @canvas.fillStyle = color
+    x = @gridSize * x
+    y = @gridSize * y
+    @canvas.fillRect(x, y, @gridSize, @gridSize)
+  drawBounds: ->
+    @canvas.strokeStyle = "#bbb"
+    @canvas.fillStyle = "rgba(255,255,255,0.5)"
+    @canvas.fillRect(0, 0, 320, 48)
+    @canvas.strokeRect(0, 0, 320, 48)
 
 bindPusherEvents = ->
   channel.bind 'created', (data) ->
@@ -243,5 +261,6 @@ gameStart = ->
   Tetris.init(twitterUsername: username)
   false
 
-$('a.start-game').click(gameStart)
-$('#intro form').submit(gameStart)
+$ ->
+  $('a.start-game').click(gameStart)
+  $('#intro form').submit(gameStart)

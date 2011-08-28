@@ -6,20 +6,6 @@ html(lang="en")
     meta(content='width=device-width, initial-scale=1, maximum-scale=1', name='viewport')
     meta(name="apple-mobile-web-app-capable", content="yes")
     meta(name="apple-mobile-web-app-status-bar-style", content="black")
-  body
-    #wrapper
-      h1
-        a(href='/') Metris
-      != body
-      footer
-        a.twitter(href='https://twitter.com/intent/tweet?via=forwardtek&text=Play massively multiplayer tetris with me http://bit.ly/metris #metris #nodeknockout')
-          img(src='https://si0.twimg.com/images/dev/cms/intents/bird/bird_black/bird_32_black.png')
-        iframe#vote(src='http://nodeknockout.com/iframe/forward', frameborder='0', scrolling='no', allowtransparency='true', width='115', height='25')
-        a(href='http://forwardtechnology.co.uk') Forward Technology
-        br
-        a(href='/leaderboard') Leaderboard
-    script(type="text/javascript")
-      var pusher_key = '#{pipe_key}';
     script(type="text/javascript", src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js")
     script(type="text/javascript", src="http://js.pusherapp.com/1.10.1-pre/pusher.min.js")
     script(type="text/javascript", src="/javascripts/gamesoup/jsgamesoup.js")
@@ -37,3 +23,17 @@ html(lang="en")
         ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
+  body
+    #wrapper
+      h1
+        a(href='/') Metris
+      != body
+      footer
+        a.twitter(href='https://twitter.com/intent/tweet?via=forwardtek&text=Play massively multiplayer tetris with me http://bit.ly/metris #metris #nodeknockout')
+          img(src='https://si0.twimg.com/images/dev/cms/intents/bird/bird_black/bird_32_black.png')
+        iframe#vote(src='http://nodeknockout.com/iframe/forward', frameborder='0', scrolling='no', allowtransparency='true', width='115', height='25')
+        a(href='http://forwardtechnology.co.uk') Forward Technology
+        br
+        a(href='/leaderboard') Leaderboard
+    script(type="text/javascript")
+      var pusher_key = '#{pipe_key}';
