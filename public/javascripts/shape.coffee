@@ -72,12 +72,12 @@ class window.Tetris.Shape
     else
       @shapeInFinalPosition()
 
-  shapeInFinalPosition: ->
-    Tetris.blocks.add(new Tetris.Block(@blockPosition(0)))
-    Tetris.blocks.add(new Tetris.Block(@blockPosition(1)))
-    Tetris.blocks.add(new Tetris.Block(@blockPosition(2)))
-    Tetris.blocks.add(new Tetris.Block(@blockPosition(3)))
-    Tetris.am.play 'block-placed'
+  shapeInFinalPosition: ->    
+    Tetris.blocks.add(new Tetris.Block(@blockPosition(0)), @owned)
+    Tetris.blocks.add(new Tetris.Block(@blockPosition(1)), @owned)
+    Tetris.blocks.add(new Tetris.Block(@blockPosition(2)), @owned)
+    Tetris.blocks.add(new Tetris.Block(@blockPosition(3)), @owned)
+    Tetris.am.play 'block-placed'    
     @remove()
     if @owned
       Tetris.gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: Tetris.playerBlockColor, owned: true))
