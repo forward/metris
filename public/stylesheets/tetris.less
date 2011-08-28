@@ -37,14 +37,31 @@ footer{
 #games{
   margin:0;
   padding:0;
+  border-top: 1px solid #c9c9c9;
+  
   li{
     display:block;
     padding:3px 0;
     margin:3px 0;
     list-style:none;
+    overflow: hidden;
+    border-bottom: 1px solid #c9c9c9;
   }
   a:hover{
     text-decoration: underline;
+  }
+  
+  ul.players {
+    margin: 0;
+    padding: 0;
+    li{
+      float: left;
+      padding: 0 3px 0 0;
+      overflow: hidden;
+      img {
+        border: 1px solid #ccc;
+      }
+    }
   }
 }
 

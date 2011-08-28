@@ -55,7 +55,8 @@ app.get '/game/:id', (req, res) ->
       shapes: {},
       grid: new Grid(160,24),
       socketShapes: {},
-      intervalId: null
+      intervalId: null,
+      twitterUsernames: {}
     }
     gameIDs.push(gameID)
     redis.incr('game_count')
@@ -75,7 +76,7 @@ app.listen port, ->
 class Grid
 
   constructor: (x,y) ->
-    @players = []
+    @players = {}
     @score = 0
     @width = x
     @height = y
@@ -92,18 +93,23 @@ class Grid
     @grid[aBlock.y][aBlock.x] = 1
     @score += 4 #add four points per block
 
-  addPlayer: (socketId) ->
-    @players.push(socketId)
+  addPlayer: (socketId, twitterUsername) ->
+    @players[socketId] = twitterUsername
 
   removePlayer: (socketId) ->
-    if (@players.indexOf(socketId) > -1)
-      @players.splice(@players.indexOf(socketId), 1)
+    if @players.hasOwnProperty(socketId)
+      delete @players[socketId]
       return true
     else
       return false
 
   numberOfPlayers: ->
-    @players.length
+    Object.keys(@players).length
+    
+  twitterUsers: ->
+    users = []
+    users.push(username) for socket, username of @players
+    users
 
   blocks: ->
     blocks = []
@@ -177,7 +183,7 @@ pipe.channels.on 'event:blockAdded', (gameID, socketID, data) ->
 
 pipe.channels.on 'event:ready', (gameID, socketID, data) ->
   game = games[gameID]
-  game.grid.addPlayer(socketID)
+  game.grid.addPlayer(socketID, data.twitterUsername)
   redis.incr('player_count')
   pipe.socket(socketID).trigger('start', shapes:game.shapes, blocks:game.grid.blocks())
   pipe.channel(gameID).trigger('players', {number: game.grid.numberOfPlayers()})

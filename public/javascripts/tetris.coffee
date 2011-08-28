@@ -66,7 +66,7 @@ window.Tetris =
         @gs.addEntity(@map)
         bindPusherEvents()
         bindPageGameEvents()
-        channel.trigger 'ready'
+        channel.trigger 'ready', twitterUsername: @twitterUsername
         @gs.launch()
 
 class Map

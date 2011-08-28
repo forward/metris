@@ -10,17 +10,23 @@ p
 
 ul#games
   - for(game in games){
-    - if (games[game].grid.players.length < 11){
+    - if (games[game].grid.numberOfPlayers() < 11){
       li
         a(href='/game/#{game}')
           | Players:
-          = games[game].grid.players.length
+          = games[game].grid.numberOfPlayers()
           \ -
           |Score:
           = games[game].grid.score
-          canvas.mini-map(id="game-map-#{game}", width="320", height="48")
+          canvas.mini-map(id="game-map-#{game}", width="318", height="48")
           script(type="text/javascript")
             new Tetris.StaticMiniMap("game-map-#{game}", !{JSON.stringify(games[game].grid.blocks())});
+        ul.players
+          - for(twitterUsername in games[game].grid.twitterUsers()){
+            li
+              a(href="http://twitter.com/#{games[game].grid.twitterUsers()[twitterUsername]}")
+                img(src="http://api.twitter.com/1/users/profile_image?screen_name=#{games[game].grid.twitterUsers()[twitterUsername]}&size=mini", alt=games[game].grid.twitterUsers()[twitterUsername])
+          - }
     - }
   - }
 
