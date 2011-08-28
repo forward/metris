@@ -198,3 +198,12 @@ $('a.start-game').click ->
   $('#intro').hide()
   Tetris.init()
   false
+
+  $('.control#left').click ->
+    Tetris.gs.entitiesCall 'keyDown_37'
+  $('.control#right').click ->
+    Tetris.gs.entitiesCall 'keyDown_39'
+  $('.control#down').click ->
+    Tetris.gs.entitiesCall 'keyDown_40'
+  $('.control#rotate').click ->
+    Tetris.gs.entitiesCall 'keyDown_38'
