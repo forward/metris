@@ -4,6 +4,10 @@ script(type="text/javascript")
 #playerNumber 0
 #score 0
   
-canvas(id='tetris', jsgs="startTetris", fps="40", width="320", height="530") Get Yourself Some Canvas!
+canvas(id='tetris', width="320", height="530") Get Yourself Some Canvas!
 
-
+#intro
+  form
+    label Optionally enter a Twitter username and we'll load your avatar for use in the game.
+    input(type="text", placeholder="Twitter username")
+  a.start-game(href="#") Start Playing

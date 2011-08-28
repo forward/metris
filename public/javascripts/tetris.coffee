@@ -5,405 +5,408 @@ makeGuid = ->
     S4 = () -> (((1+Math.random())*0x10000)|0).toString(16).substring(1)
     (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4())
 
-window.startTetris = (gs) ->
 
-  Tetris =
-    gridSize: 20
-    blockSize: 18
-    viewport: # blocks
-      x: 16
-      y: 24
-    initialShapeOffset: ->
-      @viewportOffset.x + (@viewport.x/2) - 2
-    levelSize: 160 # blocks
-    viewportOffset: # blocks
-      x: 0
-      y: 0
-    shapes: {}
-    colors: []
-    playerBlockColor:
-      h: Math.floor(Math.random()*360)
-      s:'60%'
-      l:'50%'
-    abandonedBlockColor: "#FF0080"
-    playerID: makeGuid()
-    viewportSpace: (x,y) ->
-      ret = {x: x-(@viewportOffset.x*@gridSize), y: y-(@viewportOffset.y*@gridSize)}
-      ret.visible = ret.x >= 0 && ret.x <= (@viewport.x*@gridSize)
-      ret
-    maybeAdjustViewport: (shape) ->
-      leftDiff = shape.x - @viewportOffset.x
-      if leftDiff <= 2 and @viewportOffset.x > 0
-        @viewportOffset.x -= 1
-      rightDiff = (@viewportOffset.x+@viewport.x) - (shape.x+4)
-      if rightDiff <= 2 and (@viewportOffset.x+@viewport.x) < @levelSize
-        @viewportOffset.x += 1
-    init: ->
-      # random viewport starting position
-      @viewportOffset.x = Math.floor(Math.random() * (@levelSize - @viewport.x))
-      @height = @viewport.y
-      level = new Level()
-      gs.addEntity(level)
-      @blocks = new Tetris.AbandonedBlocks()
-      gs.addEntity(@blocks)
-      @map = new Map(0, Tetris.viewport.y*Tetris.gridSize+1, @blocks.blocks, @shapes)
-      gs.addEntity(@map)
-      pusher.connection.bind 'connected', ->
-        channel.trigger 'ready'
+Tetris =
+  gridSize: 20
+  blockSize: 18
+  viewport: # blocks
+    x: 16
+    y: 24
+  initialShapeOffset: ->
+    @viewportOffset.x + (@viewport.x/2) - 2
+  levelSize: 160 # blocks
+  viewportOffset: # blocks
+    x: 0
+    y: 0
+  shapes: {}
+  colors: []
+  playerBlockColor:
+    h: Math.floor(Math.random()*360)
+    s:'60%'
+    l:'50%'
+  abandonedBlockColor: "#FF0080"
+  playerID: makeGuid()
+  viewportSpace: (x,y) ->
+    ret = {x: x-(@viewportOffset.x*@gridSize), y: y-(@viewportOffset.y*@gridSize)}
+    ret.visible = ret.x >= 0 && ret.x <= (@viewport.x*@gridSize)
+    ret
+  maybeAdjustViewport: (shape) ->
+    leftDiff = shape.x - @viewportOffset.x
+    if leftDiff <= 2 and @viewportOffset.x > 0
+      @viewportOffset.x -= 1
+    rightDiff = (@viewportOffset.x+@viewport.x) - (shape.x+4)
+    if rightDiff <= 2 and (@viewportOffset.x+@viewport.x) < @levelSize
+      @viewportOffset.x += 1
+  init: ->
+    @gs = new JSGameSoup(document.getElementById('tetris'), 40) # framerate
+    # random viewport starting position
+    @viewportOffset.x = Math.floor(Math.random() * (@levelSize - @viewport.x))
+    @height = @viewport.y
+    level = new Level()
+    @gs.addEntity(level)
+    @blocks = new Tetris.AbandonedBlocks()
+    @gs.addEntity(@blocks)
+    @map = new Map(0, Tetris.viewport.y*Tetris.gridSize+1, @blocks.blocks, @shapes)
+    @gs.addEntity(@map)
+    channel.trigger 'ready'
+    @gs.launch()
 
-  class Map
-    constructor: (@x, @y, @blocks, @shapes) ->
-      @gridSize = 2
-    draw: (c) ->
-      @drawBlocks(c)
-      @drawShapes(c)
-      @drawBounds(c)
-    drawShapes: (c) ->
-      for id, shape of @shapes
-        for i in [0,1,2,3]
-          block = shape.blockPosition(i)
-          @drawBlock(c, block.x, block.y, shape.colorString())
-    drawBlocks: (c) ->
-      @drawBlock(c, block.x, block.y, Tetris.abandonedBlockColor) for block in @blocks
-    drawBlock: (c, x, y, color) ->
-      c.fillStyle = color
-      x = @x + (@gridSize * x)
-      y = @y + (@gridSize * y)
-      c.fillRect(x, y, @gridSize, @gridSize)
-    drawBounds: (c) ->
-      c.strokeStyle = "#bbb"
-      start = @x + (Tetris.viewportOffset.x * @gridSize)
-      width = Tetris.viewport.x * @gridSize
-      height = Tetris.viewport.y * @gridSize
-      c.strokeRect(start, @y, width, height)
-
-  class Level
-    constructor: ->
-    draw: (c) ->
-      gs.clear()
-      gs.background('rgba(255, 255, 255, 0.3)')
-      c.beginPath()
-      c.moveTo(0, Tetris.viewport.y*Tetris.gridSize)
-      c.lineTo(Tetris.viewport.x*Tetris.gridSize, Tetris.viewport.y*Tetris.gridSize)
-      c.strokeStyle = "#bbb"
-      c.stroke()
-
-  class Tetris.AbandonedBlocks
-    constructor: ->
-      @blocks = []
-
-    add: (block, notify=true) ->
-      @blocks.push(block)
-      if notify
-        channel.trigger 'blockAdded', x: block.x, y: block.y, playerID: Tetris.playerID
-
-    reset: ->
-      for block in @blocks
-        gs.delEntity(block)
-      @blocks = []
-
-    draw: (c) ->
-      block.draw(c) for block in @blocks
-
-    contains: (x,y) ->
-      for block in @blocks
-        if block.x == x && block.y == y
-          return true
-      return false
-
-  class Tetris.Block
-    constructor: (opts={})->
-      @x = opts.x
-      @y = opts.y
-
-    draw: (c) ->
-      vs = Tetris.viewportSpace(@x*Tetris.gridSize+1, @y*Tetris.gridSize+1)
-      return unless vs.visible
-      c.fillStyle = Tetris.abandonedBlockColor
-      c.fillRect(vs.x, vs.y, Tetris.blockSize, Tetris.blockSize)
-
-
-  class Tetris.Shape
-    @randomShape: (opts) ->
-      keys = Object.keys(Tetris.Shape.types)
-      pos = Math.floor(Math.random()*keys.length)
-      new Tetris.Shape.types[keys[pos]](opts)
-    constructor: (opts={}) ->
-      isNewObj = opts.id == undefined
-      @id = opts.id || makeGuid()
-      @x = opts.x || 0
-      @y = opts.y || 0
-      @rotation = opts.rotation || 0
-      @color = opts.color || {r:0, g:0, b:0, a:1}
-      @owned = opts.owned || false
-      Tetris.shapes[@id] = this
-      @created() if isNewObj
-
-    remove: ->
-      gs.delEntity(this)
-      delete Tetris.shapes[@id]
-      if @owned
-        channel.trigger 'removed',
-          id: @id,
-          playerID: Tetris.playerID,
-          x: @x,
-          y: @y,
-          rotation: @rotation
-
-    blockPosition: (blockNumber, rotation=null) ->
-       definition = @shapeDefinition(rotation || @rotation)[blockNumber]
-       x = @x + definition[0]
-       y = @y + definition[1]
-       {x: x, y: y}
-
-    canMoveDown: ->
-      return @canMoveTo(0, +1)
-
-    canMoveTo: (xOffset, yOffset, rotation=null) ->
+class Map
+  constructor: (@x, @y, @blocks, @shapes) ->
+    @gridSize = 2
+  draw: (c) ->
+    @drawBlocks(c)
+    @drawShapes(c)
+    @drawBounds(c)
+  drawShapes: (c) ->
+    for id, shape of @shapes
       for i in [0,1,2,3]
-        x = @blockPosition(i, rotation).x + xOffset
-        y = @blockPosition(i, rotation).y + yOffset
-        return false if Tetris.blocks.contains(x, y)
-        return false if x < 0
-        return false if x >= Tetris.levelSize
-        return false if y >= Tetris.viewport.y
-      return true
-    
-    colorString: ->
-      alpha = if @owned then 1 else 0.4
-      if @color.r?
-        "rgba(#{@color.r},#{@color.g},#{@color.b},#{alpha})"
-      else
-        "hsla(#{@color.h},#{@color.s},#{@color.l},#{alpha})"
-    
-    draw: (c) ->
-      drawBlock = (blockDef) =>
-        x = (@x*Tetris.gridSize) + (blockDef[0]*Tetris.gridSize) + 1
-        y = (@y*Tetris.gridSize) + (blockDef[1]*Tetris.gridSize) + 1
-        vs = Tetris.viewportSpace(x,y)
-        return unless vs.visible
-        c.fillStyle = @colorString()
-        c.fillRect(vs.x, vs.y, Tetris.blockSize, Tetris.blockSize)
-      definition = @shapeDefinition(this.rotation)
-      drawBlock(definition[0])
-      drawBlock(definition[1])
-      drawBlock(definition[2])
-      drawBlock(definition[3])
+        block = shape.blockPosition(i)
+        @drawBlock(c, block.x, block.y, shape.colorString())
+  drawBlocks: (c) ->
+    @drawBlock(c, block.x, block.y, Tetris.abandonedBlockColor) for block in @blocks
+  drawBlock: (c, x, y, color) ->
+    c.fillStyle = color
+    x = @x + (@gridSize * x)
+    y = @y + (@gridSize * y)
+    c.fillRect(x, y, @gridSize, @gridSize)
+  drawBounds: (c) ->
+    c.strokeStyle = "#bbb"
+    start = @x + (Tetris.viewportOffset.x * @gridSize)
+    width = Tetris.viewport.x * @gridSize
+    height = Tetris.viewport.y * @gridSize
+    c.strokeRect(start, @y, width, height)
 
-    drop: ->
-      if @canMoveDown()
-        @y++
-        @moved()
-      else
-        @shapeInFinalPosition()
+class Level
+  constructor: ->
+  draw: (c) ->
+    Tetris.gs.clear()
+    Tetris.gs.background('rgba(255, 255, 255, 0.3)')
+    c.beginPath()
+    c.moveTo(0, Tetris.viewport.y*Tetris.gridSize)
+    c.lineTo(Tetris.viewport.x*Tetris.gridSize, Tetris.viewport.y*Tetris.gridSize)
+    c.strokeStyle = "#bbb"
+    c.stroke()
 
-    shapeInFinalPosition: ->
-      Tetris.blocks.add(new Tetris.Block(@blockPosition(0)))
-      Tetris.blocks.add(new Tetris.Block(@blockPosition(1)))
-      Tetris.blocks.add(new Tetris.Block(@blockPosition(2)))
-      Tetris.blocks.add(new Tetris.Block(@blockPosition(3)))
-      @remove()
-      if @owned
-        gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: Tetris.playerBlockColor, owned: true))
+class Tetris.AbandonedBlocks
+  constructor: ->
+    @blocks = []
 
-    created: ->
-      # console.log('creating a new piece')
-      channel.trigger 'created',
-        playerID: Tetris.playerID,
-        x: @x,
-        y: @y,
-        rotation: @rotation,
+  add: (block, notify=true) ->
+    @blocks.push(block)
+    if notify
+      channel.trigger 'blockAdded', x: block.x, y: block.y, playerID: Tetris.playerID
+
+  reset: ->
+    for block in @blocks
+      Tetris.gs.delEntity(block)
+    @blocks = []
+
+  draw: (c) ->
+    block.draw(c) for block in @blocks
+
+  contains: (x,y) ->
+    for block in @blocks
+      if block.x == x && block.y == y
+        return true
+    return false
+
+class Tetris.Block
+  constructor: (opts={})->
+    @x = opts.x
+    @y = opts.y
+
+  draw: (c) ->
+    vs = Tetris.viewportSpace(@x*Tetris.gridSize+1, @y*Tetris.gridSize+1)
+    return unless vs.visible
+    c.fillStyle = Tetris.abandonedBlockColor
+    c.fillRect(vs.x, vs.y, Tetris.blockSize, Tetris.blockSize)
+
+
+class Tetris.Shape
+  @randomShape: (opts) ->
+    keys = Object.keys(Tetris.Shape.types)
+    pos = Math.floor(Math.random()*keys.length)
+    new Tetris.Shape.types[keys[pos]](opts)
+  constructor: (opts={}) ->
+    isNewObj = opts.id == undefined
+    @id = opts.id || makeGuid()
+    @x = opts.x || 0
+    @y = opts.y || 0
+    @rotation = opts.rotation || 0
+    @color = opts.color || {r:0, g:0, b:0, a:1}
+    @owned = opts.owned || false
+    Tetris.shapes[@id] = this
+    @created() if isNewObj
+
+  remove: ->
+    Tetris.gs.delEntity(this)
+    delete Tetris.shapes[@id]
+    if @owned
+      channel.trigger 'removed',
         id: @id,
-        type: @type,
-        color: @color
-
-    moved: ->
-      return unless @owned
-      Tetris.maybeAdjustViewport(this)
-      channel.trigger 'moved',
         playerID: Tetris.playerID,
         x: @x,
         y: @y,
-        rotation: @rotation,
-        id: @id
+        rotation: @rotation
 
-    # LEFT
-    keyDown_37: ->
-      return unless @owned
-      return unless @canMoveTo(-1, 0)
-      @x--
-      @moved()
+  blockPosition: (blockNumber, rotation=null) ->
+     definition = @shapeDefinition(rotation || @rotation)[blockNumber]
+     x = @x + definition[0]
+     y = @y + definition[1]
+     {x: x, y: y}
 
-    # DOWN
-    keyDown_40: ->
-      return unless @owned
-      return unless @canMoveTo(0,2)
-      @y++
-      @y++
-      @moved()      
+  canMoveDown: ->
+    return @canMoveTo(0, +1)
 
-    # UP
-    keyDown_38: ->
-      return unless @owned
-      if @rotation is 3
-        newRotation = 0
-      else
-        newRotation = @rotation + 1
-      if @canMoveTo(0,0,newRotation)
-        @rotation = newRotation
-        @moved()
-
-    # RIGHT
-    keyDown_39: ->
-      return unless @owned
-      return unless @canMoveTo(1, 0)
-      @x++
-      @moved()
-
-
-  class Tetris.CubeShape extends Tetris.Shape
-    type: 'C'
-    shapeDefinition: (rotation) ->
-      {
-        0: [[0,0], [1,1], [0,1], [1,0]],
-        1: [[0,0], [1,1], [0,1], [1,0]],
-        2: [[0,0], [1,1], [0,1], [1,0]],
-        3: [[0,0], [1,1], [0,1], [1,0]]
-      }[rotation]
-
-  class Tetris.LShape extends Tetris.Shape
-    type: 'L'
-    shapeDefinition: (rotation) ->
-      {
-        0: [[0,0],[1,0],[1,1],[1,2]],
-        1: [[0,1],[1,1],[2,1],[2,0]],
-        2: [[0,0],[0,1],[0,2],[1,2]],
-        3: [[0,0],[1,0],[2,0],[0,1]]
-      }[rotation]
-
-  class Tetris.JShape extends Tetris.Shape
-    type: 'J'
-    shapeDefinition: (rotation) ->
-      {
-        0: [[0,0],[1,0],[0,1],[0,2]],
-        1: [[0,0],[1,0],[2,0],[2,1]],
-        2: [[1,0],[1,1],[1,2],[0,2]],
-        3: [[0,0],[0,1],[1,1],[2,1]]
-      }[rotation]
-
-  class Tetris.SShape extends Tetris.Shape
-    type: 'S'
-    shapeDefinition: (rotation) ->
-      {
-        0: [[0,1],[1,1],[1,0],[2,0]],
-        1: [[0,0],[0,1],[1,1],[1,2]],
-        2: [[0,1],[1,1],[1,0],[2,0]],
-        3: [[0,0],[0,1],[1,1],[1,2]]
-      }[rotation]
-
-  class Tetris.ZShape extends Tetris.Shape
-    type: 'Z'
-    shapeDefinition: (rotation) ->
-      {
-        0: [[0,0],[1,0],[1,1],[2,1]],
-        1: [[1,0],[1,1],[0,1],[0,2]],
-        2: [[0,0],[1,0],[1,1],[2,1]],
-        3: [[1,0],[1,1],[0,1],[0,2]]
-      }[rotation]
-
-  class Tetris.TShape extends Tetris.Shape
-    type: 'T'
-    shapeDefinition: (rotation) ->
-      {
-        0: [[0,0],[1,0],[2,0],[1,1]],
-        1: [[0,-1],[0,0],[0,1],[1,0]],
-        2: [[0,0],[1,-1],[2,0],[1,0]],
-        3: [[2,-1],[1,0],[2,0],[2,1]]
-      }[rotation]
-
-  class Tetris.IShape extends Tetris.Shape
-    type: 'I'
-    shapeDefinition: (rotation) ->
-      {
-        0: [[0,0], [0,1], [0,2], [0,3]],
-        1: [[-1,1],[0,1],[1,1],[2,1]],
-        2: [[0,0], [0,1], [0,2], [0,3]],
-        3: [[-1,1],[0,1],[1,1],[2,1]]
-      }[rotation]
-
-  Tetris.Shape.types = {
-    'C': Tetris.CubeShape,
-    'L': Tetris.LShape,
-    'J': Tetris.JShape,
-    'S': Tetris.SShape,
-    'Z': Tetris.ZShape,
-    'T': Tetris.TShape,
-    'I': Tetris.IShape
-  }
-
-  channel.bind 'created', (data) ->
-    return if data.playerID is Tetris.playerID
-    shapeClass = Tetris.Shape.types[data.type]
-    gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color) )
-
-  channel.bind 'moved', (data) ->
-    return if data.playerID is Tetris.playerID
-    shape = Tetris.shapes[data.id]
-    return unless shape?
-    shape.x = data.x
-    shape.y = data.y
-    shape.rotation = data.rotation
-
-  pusher.back_channel.bind 'start', (info) ->
-    for id, data of info.shapes
-      shapeClass = Tetris.Shape.types[data.type]
-      gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color) )
-    for block in info.blocks
-      Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
-    gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: Tetris.playerBlockColor, owned: true))
-
-  channel.bind 'refreshLines', (blocks) ->
-    Tetris.blocks.reset()
-    for block in blocks
-      Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
-
-  channel.bind 'purge', (data) ->
-    shape = Tetris.shapes[data.id]
-    shape.remove()
-
-  channel.bind 'inFinalPosition', (data) ->
-    return if data.playerID is Tetris.playerID
-    shape = Tetris.shapes[data.id]
-    shape.x = data.x
-    shape.y = data.y
-    shape.rotation = data.rotation
-    shape.shapeInFinalPosition()
-
-  channel.bind 'drop', ->
-    for id, data of Tetris.shapes
-      Tetris.shapes[id].drop()
-
-  channel.bind 'gameover', ->
-    score = $('#score').html()
-    $('#wrapper').append('<div id="gameover"><h2>Game Over</h2><p>You scored: <span>'+
-                          score +
-                          '</span></p><p><a class="tweet" href="https://twitter.com/intent/tweet?via=forwardtek&text=I scored '+
-                          score +
-                          ' at Metris http://bit.ly/metris #metris #nodeknockout">Tweet it</a> or '+
-                          '<a href="/">start over</a></p></div>')
-
-  channel.bind 'scoreUpdate', (data) ->
-    $('#score').html(data.score)
-
-  channel.bind 'players', (data) ->
-    if (data.number == 1)
-      text = " player online"
+  canMoveTo: (xOffset, yOffset, rotation=null) ->
+    for i in [0,1,2,3]
+      x = @blockPosition(i, rotation).x + xOffset
+      y = @blockPosition(i, rotation).y + yOffset
+      return false if Tetris.blocks.contains(x, y)
+      return false if x < 0
+      return false if x >= Tetris.levelSize
+      return false if y >= Tetris.viewport.y
+    return true
+  
+  colorString: ->
+    alpha = if @owned then 1 else 0.4
+    if @color.r?
+      "rgba(#{@color.r},#{@color.g},#{@color.b},#{alpha})"
     else
-      text = " players online"
-    $('#playerNumber').html(data.number+text)
+      "hsla(#{@color.h},#{@color.s},#{@color.l},#{alpha})"
+  
+  draw: (c) ->
+    drawBlock = (blockDef) =>
+      x = (@x*Tetris.gridSize) + (blockDef[0]*Tetris.gridSize) + 1
+      y = (@y*Tetris.gridSize) + (blockDef[1]*Tetris.gridSize) + 1
+      vs = Tetris.viewportSpace(x,y)
+      return unless vs.visible
+      c.fillStyle = @colorString()
+      c.fillRect(vs.x, vs.y, Tetris.blockSize, Tetris.blockSize)
+    definition = @shapeDefinition(this.rotation)
+    drawBlock(definition[0])
+    drawBlock(definition[1])
+    drawBlock(definition[2])
+    drawBlock(definition[3])
 
-  channel.bind 'blockAdded', (data) ->
-    return if data.playerID is Tetris.playerID
-    Tetris.blocks.add(new Tetris.Block(x:data.x, y:data.y), false)
+  drop: ->
+    if @canMoveDown()
+      @y++
+      @moved()
+    else
+      @shapeInFinalPosition()
 
+  shapeInFinalPosition: ->
+    Tetris.blocks.add(new Tetris.Block(@blockPosition(0)))
+    Tetris.blocks.add(new Tetris.Block(@blockPosition(1)))
+    Tetris.blocks.add(new Tetris.Block(@blockPosition(2)))
+    Tetris.blocks.add(new Tetris.Block(@blockPosition(3)))
+    @remove()
+    if @owned
+      Tetris.gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: Tetris.playerBlockColor, owned: true))
+
+  created: ->
+    # console.log('creating a new piece')
+    channel.trigger 'created',
+      playerID: Tetris.playerID,
+      x: @x,
+      y: @y,
+      rotation: @rotation,
+      id: @id,
+      type: @type,
+      color: @color
+
+  moved: ->
+    return unless @owned
+    Tetris.maybeAdjustViewport(this)
+    channel.trigger 'moved',
+      playerID: Tetris.playerID,
+      x: @x,
+      y: @y,
+      rotation: @rotation,
+      id: @id
+
+  # LEFT
+  keyDown_37: ->
+    return unless @owned
+    return unless @canMoveTo(-1, 0)
+    @x--
+    @moved()
+
+  # UP
+  keyDown_38: ->
+    return unless @owned
+    if @rotation is 3
+      newRotation = 0
+    else
+      newRotation = @rotation + 1
+    if @canMoveTo(0,0,newRotation)
+      @rotation = newRotation
+      @moved()
+
+  # RIGHT
+  keyDown_39: ->
+    return unless @owned
+    return unless @canMoveTo(1, 0)
+    @x++
+    @moved()
+
+  # DOWN
+  keyDown_40: ->
+    return unless @owned
+    return unless @canMoveTo(0,2)
+    @y++
+    @y++
+    @moved()
+
+class Tetris.CubeShape extends Tetris.Shape
+  type: 'C'
+  shapeDefinition: (rotation) ->
+    {
+      0: [[0,0], [1,1], [0,1], [1,0]],
+      1: [[0,0], [1,1], [0,1], [1,0]],
+      2: [[0,0], [1,1], [0,1], [1,0]],
+      3: [[0,0], [1,1], [0,1], [1,0]]
+    }[rotation]
+
+class Tetris.LShape extends Tetris.Shape
+  type: 'L'
+  shapeDefinition: (rotation) ->
+    {
+      0: [[0,0],[1,0],[1,1],[1,2]],
+      1: [[0,1],[1,1],[2,1],[2,0]],
+      2: [[0,0],[0,1],[0,2],[1,2]],
+      3: [[0,0],[1,0],[2,0],[0,1]]
+    }[rotation]
+
+class Tetris.JShape extends Tetris.Shape
+  type: 'J'
+  shapeDefinition: (rotation) ->
+    {
+      0: [[0,0],[1,0],[0,1],[0,2]],
+      1: [[0,0],[1,0],[2,0],[2,1]],
+      2: [[1,0],[1,1],[1,2],[0,2]],
+      3: [[0,0],[0,1],[1,1],[2,1]]
+    }[rotation]
+
+class Tetris.SShape extends Tetris.Shape
+  type: 'S'
+  shapeDefinition: (rotation) ->
+    {
+      0: [[0,1],[1,1],[1,0],[2,0]],
+      1: [[0,0],[0,1],[1,1],[1,2]],
+      2: [[0,1],[1,1],[1,0],[2,0]],
+      3: [[0,0],[0,1],[1,1],[1,2]]
+    }[rotation]
+
+class Tetris.ZShape extends Tetris.Shape
+  type: 'Z'
+  shapeDefinition: (rotation) ->
+    {
+      0: [[0,0],[1,0],[1,1],[2,1]],
+      1: [[1,0],[1,1],[0,1],[0,2]],
+      2: [[0,0],[1,0],[1,1],[2,1]],
+      3: [[1,0],[1,1],[0,1],[0,2]]
+    }[rotation]
+
+class Tetris.TShape extends Tetris.Shape
+  type: 'T'
+  shapeDefinition: (rotation) ->
+    {
+      0: [[0,0],[1,0],[2,0],[1,1]],
+      1: [[0,-1],[0,0],[0,1],[1,0]],
+      2: [[0,0],[1,-1],[2,0],[1,0]],
+      3: [[2,-1],[1,0],[2,0],[2,1]]
+    }[rotation]
+
+class Tetris.IShape extends Tetris.Shape
+  type: 'I'
+  shapeDefinition: (rotation) ->
+    {
+      0: [[0,0], [0,1], [0,2], [0,3]],
+      1: [[-1,1],[0,1],[1,1],[2,1]],
+      2: [[0,0], [0,1], [0,2], [0,3]],
+      3: [[-1,1],[0,1],[1,1],[2,1]]
+    }[rotation]
+
+Tetris.Shape.types = {
+  'C': Tetris.CubeShape,
+  'L': Tetris.LShape,
+  'J': Tetris.JShape,
+  'S': Tetris.SShape,
+  'Z': Tetris.ZShape,
+  'T': Tetris.TShape,
+  'I': Tetris.IShape
+}
+
+channel.bind 'created', (data) ->
+  return if data.playerID is Tetris.playerID
+  shapeClass = Tetris.Shape.types[data.type]
+  Tetris.gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color) )
+
+channel.bind 'moved', (data) ->
+  return if data.playerID is Tetris.playerID
+  shape = Tetris.shapes[data.id]
+  return unless shape?
+  shape.x = data.x
+  shape.y = data.y
+  shape.rotation = data.rotation
+
+pusher.back_channel.bind 'start', (info) ->
+  for id, data of info.shapes
+    shapeClass = Tetris.Shape.types[data.type]
+    Tetris.gs.addEntity( new shapeClass(id: data.id, x:data.x, y:data.y, rotation: data.rotation, color: data.color) )
+  for block in info.blocks
+    Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
+  Tetris.gs.addEntity(Tetris.Shape.randomShape(x:Tetris.initialShapeOffset(), y:0, color: Tetris.playerBlockColor, owned: true))
+
+channel.bind 'refreshLines', (blocks) ->
+  Tetris.blocks.reset()
+  for block in blocks
+    Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
+
+channel.bind 'purge', (data) ->
+  shape = Tetris.shapes[data.id]
+  shape.remove()
+
+channel.bind 'inFinalPosition', (data) ->
+  return if data.playerID is Tetris.playerID
+  shape = Tetris.shapes[data.id]
+  shape.x = data.x
+  shape.y = data.y
+  shape.rotation = data.rotation
+  shape.shapeInFinalPosition()
+
+channel.bind 'drop', ->
+  for id, data of Tetris.shapes
+    Tetris.shapes[id].drop()
+
+channel.bind 'gameover', ->
+  score = $('#score').html()
+  $('#wrapper').append('<div id="gameover"><h2>Game Over</h2><p>You scored: <span>'+
+                        score +
+                        '</span></p><p><a class="tweet" href="https://twitter.com/intent/tweet?via=forwardtek&text=I scored '+
+                        score +
+                        ' at Metris http://bit.ly/metris #metris #nodeknockout">Tweet it</a> or '+
+                        '<a href="/">start over</a></p></div>')
+
+channel.bind 'scoreUpdate', (data) ->
+  $('#score').html(data.score)
+
+channel.bind 'players', (data) ->
+  if (data.number == 1)
+    text = " player online"
+  else
+    text = " players online"
+  $('#playerNumber').html(data.number+text)
+
+channel.bind 'blockAdded', (data) ->
+  return if data.playerID is Tetris.playerID
+  Tetris.blocks.add(new Tetris.Block(x:data.x, y:data.y), false)
+
+
+$('a.start-game').click ->
+  $('#intro').hide()
   Tetris.init()
+  false
