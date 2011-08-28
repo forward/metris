@@ -2,7 +2,11 @@ ul#games
   - for(game in games){
     li
       a(href='/game/#{game}')
-        = game
+        | Players:
+        = games[game].grid.players.length
+        \ -
+        |Score:
+        = games[game].grid.score
   - }
 
 p

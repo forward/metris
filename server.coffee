@@ -72,16 +72,16 @@ class Grid
     @grid[aBlock.y][aBlock.x] = 1
     @score += 4 #add four points per block
 
-  addPlayer: (socketId) ->    
+  addPlayer: (socketId) ->
     @players.push(socketId)
-    
+
   removePlayer: (socketId) ->
     if (@players.indexOf(socketId) > -1)
       @players.splice(@players.indexOf(socketId), 1)
       return true
-    else 
+    else
       return false
-  
+
   numberOfPlayers: ->
     @players.length
 
@@ -155,7 +155,7 @@ pipe.channels.on 'event:ready', (gameID, socketID, data) ->
   game = games[gameID]
   game.grid.addPlayer(socketID)
   pipe.socket(socketID).trigger('start', shapes:game.shapes, blocks:game.grid.blocks())
-  pipe.channel(gameID).trigger('players', {number: game.grid.numberOfPlayers()})    
+  pipe.channel(gameID).trigger('players', {number: game.grid.numberOfPlayers()})
 
 pipe.sockets.on 'close', (socketID) ->
   theGameID = null
@@ -163,9 +163,9 @@ pipe.sockets.on 'close', (socketID) ->
     if games[gameID].grid.removePlayer(socketID)
       theGameID = gameID
 
-  game = games[theGameID]    
-  pipe.channel(theGameID).trigger('players', {number: game.grid.numberOfPlayers()})    
-    
+  game = games[theGameID]
+  pipe.channel(theGameID).trigger('players', {number: game.grid.numberOfPlayers()})
+
   shapeID = game.socketShapes[socketID]
   delete game.shapes[shapeID]
   pipe.channel(theGameID).trigger('purge', {id:shapeID})
