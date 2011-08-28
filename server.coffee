@@ -58,9 +58,9 @@ app.get '/game/:id', (req, res) ->
   res.render('game', {pipe_key: pusher_key, game: gameID})
 
 app.get '/leaderboard', (req, res) ->
-  redis.lrange 'scores', 0, -1, (err, scores) ->
+  redis.sort 'scores', 'limit', 0, 100, 'ALPHA', 'DESC', (err, scores) ->
     console.log(scores)
-    res.render('leaderboard', {pipe_key: pusher_key, scores: scores.sort().reverse()})
+    res.render('leaderboard', {pipe_key: pusher_key, scores: scores})
 
 port = process.env.PORT || 8080
 app.listen port, ->
