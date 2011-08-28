@@ -38,15 +38,15 @@ window.Tetris =
       @viewportOffset.x += 1
   loadAvatar: (callback) ->
     return callback() unless @twitterUsername
-    $.getJSON "http://twitter.com/statuses/user_timeline/#{@twitterUsername}.json?callback=?&count=1", (data) =>
-      @avatar = data[0].user.profile_image_url
-      @avatarImage = new Image()
-      @avatarImage.onload = (=> callback(@avatar))
-      @avatarImage.src = @avatar
+    @avatar = "http://api.twitter.com/1/users/profile_image?screen_name=#{@twitterUsername}&size=mini"
+    @avatarImage = new Image()
+    @avatarImage.onload = (=> callback(@avatarImage))
+    @avatarImage.onerror = (=> callback(null))
+    @avatarImage.src = @avatar
   init: (options) ->
     @twitterUsername = options.twitterUsername
     @loadAvatar => 
-      @gs = new JSGameSoup(document.getElementById('tetris'), 40) # framerate
+      @gs = new JSGameSoup(document.getElementById('tetris'), 25) # framerate
       @am = new AudioManager()
       @am.load '/sounds/block-placed.wav', 'block-placed'
       @am.load '/sounds/line-completed.wav', 'line-completed'
