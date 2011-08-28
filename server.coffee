@@ -55,6 +55,7 @@ app.listen port, ->
 class Grid
 
   constructor: (x,y) ->
+    @players = []
     @score = 0
     @width = x
     @height = y
@@ -70,6 +71,19 @@ class Grid
     # console.log('adding a block', aBlock.y, aBlock.x)
     @grid[aBlock.y][aBlock.x] = 1
     @score += 4 #add four points per block
+
+  addPlayer: (socketId) ->    
+    @players.push(socketId)
+    
+  removePlayer: (socketId) ->
+    if (@players.indexOf(socketId) > -1)
+      @players.splice(@players.indexOf(socketId), 1)
+      return true
+    else 
+      return false
+  
+  numberOfPlayers: ->
+    @players.length
 
   blocks: ->
     blocks = []
@@ -101,7 +115,6 @@ class Grid
         newGrid[line] = row
 
     @grid = newGrid
-    # console.log("new", @grid)
     completedRows > 0
 
 pipe.channels.on 'event:created', (gameID, socketID, data) ->
@@ -140,12 +153,22 @@ pipe.channels.on 'event:blockAdded', (gameID, socketID, data) ->
 
 pipe.channels.on 'event:ready', (gameID, socketID, data) ->
   game = games[gameID]
+  game.grid.addPlayer(socketID)
   pipe.socket(socketID).trigger('start', shapes:game.shapes, blocks:game.grid.blocks())
+  pipe.channel(gameID).trigger('players', {number: game.grid.numberOfPlayers()})    
 
 pipe.sockets.on 'close', (socketID) ->
-  shapeID = socketShapes[socketID]
-  delete shapes[shapeID]
-  pipe.channel(gameID).trigger('purge', {id:shapeID})
+  theGameID = null
+  for gameID in gameIDs
+    if games[gameID].grid.removePlayer(socketID)
+      theGameID = gameID
+
+  game = games[theGameID]    
+  pipe.channel(theGameID).trigger('players', {number: game.grid.numberOfPlayers()})    
+    
+  shapeID = game.socketShapes[socketID]
+  delete game.shapes[shapeID]
+  pipe.channel(theGameID).trigger('purge', {id:shapeID})
 
 pipe.on 'connected', ->
   setInterval (->

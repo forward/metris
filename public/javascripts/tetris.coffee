@@ -381,6 +381,13 @@ window.startTetris = (gs) ->
   channel.bind 'scoreUpdate', (data) ->
     $('#score').html(data.score)
 
+  channel.bind 'players', (data) ->
+    if (data.number == 1)
+      text = " player online"
+    else
+      text = " players online"
+    $('#playerNumber').html(data.number+text)
+
   channel.bind 'blockAdded', (data) ->
     return if data.playerID is Tetris.playerID
     Tetris.blocks.add(new Tetris.Block(x:data.x, y:data.y), false)
