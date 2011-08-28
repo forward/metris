@@ -45,6 +45,8 @@ window.Tetris =
       @avatar = @avatarImage = null
       callback(null)
     @avatarImage.src = @avatar
+  toggleSfxMute: ->
+    @sfxMuted = !@sfxMuted
   init: (options) ->
     @twitterUsername = options.twitterUsername
     @loadAvatar => 
@@ -52,6 +54,7 @@ window.Tetris =
       @am = new AudioManager()
       @am.load '/sounds/block-placed.wav', 'block-placed'
       @am.load '/sounds/line-completed.wav', 'line-completed'
+      @am.load '/sounds/gameover.wav', 'gameover'
       # random viewport starting position
       @viewportOffset.x = Math.floor(Math.random() * (@levelSize - @viewport.x))
       @height = @viewport.y
@@ -160,7 +163,7 @@ pusher.back_channel.bind 'start', (info) ->
 
 channel.bind 'refreshLines', (blocks) ->
   Tetris.blocks.reset()
-  Tetris.am.play 'line-completed'
+  Tetris.am.play 'line-completed' unless Tetris.sfxMuted
   for block in blocks
     Tetris.blocks.add(new Tetris.Block(x:block.x, y:block.y), false)
 
@@ -181,6 +184,7 @@ channel.bind 'drop', ->
     Tetris.shapes[id].drop()
 
 channel.bind 'gameover', ->
+  Tetris.am.play 'gameover'
   score = $('#score').html()
   $('#wrapper').append('<div id="gameover"><h2>Game Over</h2><p>You scored: <span>'+
                         score +
@@ -208,9 +212,16 @@ $('.control#right').click ->  Tetris.gs.entitiesCall('keyDown_39')
 $('.control#down').click ->   Tetris.gs.entitiesCall('keyDown_40')
 $('.control#rotate').click -> Tetris.gs.entitiesCall('keyDown_38')
 
+$('#sound-fx-toggle').click ->
+  toggle = $('#sound-fx-toggle')
+  if toggle.hasClass('toggle-off') then toggle.removeClass('toggle-off') else toggle.addClass('toggle-off')
+  Tetris.toggleSfxMute()
+  console.log(Tetris.sfxMuted)
+
 gameStart = ->
   $('#score').show()
   $('#playerNumber').show()
+  $('#sound-fx-toggle').show()
   $('#intro').hide()
   username = $('#username-input').val()
   username = null unless username.length > 0
