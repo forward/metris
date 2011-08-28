@@ -107,16 +107,16 @@ class Level
     c.beginPath()
     count = (Tetris.viewport.x)
     console.log(count)
-    # for num in
+
     for num in [0..Tetris.viewport.y]
       c.moveTo(0, Tetris.gridSize * num)
       c.lineTo(Tetris.viewport.x*Tetris.gridSize, Tetris.gridSize * num)
-      c.strokeStyle = "#E6CCD3"
+      c.strokeStyle = "#F0DFE3"
       c.stroke()
     for num in [0..Tetris.viewport.x]
       c.moveTo(Tetris.gridSize * num, 0)
       c.lineTo(Tetris.gridSize * num, Tetris.viewport.y*Tetris.gridSize)
-      c.strokeStyle = "#E6CCD3"
+      c.strokeStyle = "#F0DFE3"
       c.stroke()
     
 class Tetris.AbandonedBlocks
