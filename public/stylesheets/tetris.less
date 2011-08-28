@@ -51,9 +51,10 @@ footer{
   font-size:20px;
   font-weight:bold;
   position:absolute;
-  right:0;
-  margin-top: 30px;
+  right:5px;
+  margin-top: 39px;
   text-align:right;
+  z-index:11;
 }
 
 #playerNumber{
@@ -61,8 +62,10 @@ footer{
   font-size:10px;
   font-weight:bold;
   position:absolute;
-  right:0;
+  right:5px;
   text-align:right;
+  z-index:11;
+  padding-top:5px;
 }
 
 #sound-fx-toggle{
@@ -70,17 +73,23 @@ footer{
   font-size:12px;
   font-weight:bold;
   position:absolute;
-  left:0;
+  left:6px;
+  top:66px;
   text-align:right;
-  cursor: pointer
+  cursor: pointer;
+  z-index:11;
+  width:12px;
+  height:9px;
+  text-indent:-999px;
+  background:url(/images/volume.png) no-repeat;
 }
 
 #sound-fx-toggle:hover {
   color: #808080;
 }
 
-.toggle-off {
-  text-decoration: line-through;
+#sound-fx-toggle.toggle-off {
+  background:url(/images/mute.png) no-repeat;
 }
 
 
