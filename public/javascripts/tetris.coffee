@@ -40,8 +40,10 @@ window.Tetris =
     return callback() unless @twitterUsername
     @avatar = "http://api.twitter.com/1/users/profile_image?screen_name=#{@twitterUsername}&size=mini"
     @avatarImage = new Image()
-    @avatarImage.onload = (=> callback(@avatarImage))
-    @avatarImage.onerror = (=> callback(null))
+    @avatarImage.onload = => callback(@avatarImage)
+    @avatarImage.onerror = =>
+      @avatar = @avatarImage = null
+      callback(null)
     @avatarImage.src = @avatar
   init: (options) ->
     @twitterUsername = options.twitterUsername
