@@ -49,7 +49,7 @@ window.Tetris =
     window.channel = pusher.subscribe(gameID)
     @twitterUsername = options.twitterUsername
     pusher.connection.bind 'connected', =>
-      @loadAvatar => 
+      @loadAvatar =>
         @gs = new JSGameSoup(document.getElementById('tetris'), 25) # framerate
         @am = new AudioManager()
         @am.load '/sounds/block-placed.wav', 'block-placed'
@@ -127,7 +127,7 @@ class Tetris.AbandonedBlocks
   add: (block, notify=true) ->
     @blocks.push(block)
     if notify
-      channel.trigger 'blockAdded', x: block.x, y: block.y, playerID: Tetris.playerID      
+      channel.trigger 'blockAdded', x: block.x, y: block.y, playerID: Tetris.playerID
 
   reset: ->
     for block in @blocks
@@ -153,7 +153,7 @@ class Tetris.Block
     return unless vs.visible
     c.fillStyle = Tetris.abandonedBlockColor
     c.fillRect(vs.x, vs.y, Tetris.blockSize, Tetris.blockSize)
-    
+
 class Tetris.StaticMiniMap
   constructor: (@id, @blocks) ->
     @canvas = document.getElementById(@id).getContext('2d')
@@ -201,7 +201,7 @@ bindPusherEvents = ->
     shape.remove()
 
   channel.bind 'inFinalPosition', (data) ->
-    return if data.playerID is Tetris.playerID    
+    return if data.playerID is Tetris.playerID
     shape = Tetris.shapes[data.id]
     shape.x = data.x
     shape.y = data.y
@@ -219,7 +219,7 @@ bindPusherEvents = ->
                           score +
                           '</span></p><p><a class="tweet" href="https://twitter.com/intent/tweet?via=forwardtek&text=I scored '+
                           score +
-                          ' at Metris http://bit.ly/metris #metris #nodeknockout">Tweet it</a> or '+
+                          ' at Metris http://bit.ly/metris">Tweet it</a> or '+
                           '<a href="/">start over</a></p></div>')
 
   channel.bind 'scoreUpdate', (data) ->

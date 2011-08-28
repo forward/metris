@@ -25,10 +25,10 @@ ul#games
           - for(twitterUsername in games[game].grid.twitterUsers()){
             li
               - if(username = games[game].grid.twitterUsers()[twitterUsername]){
-                a(href="http://twitter.com/#{username}")
+                a(href="http://twitter.com/#{username}", target='_blank')
                   img(src="http://api.twitter.com/1/users/profile_image?screen_name=#{username}&size=mini", alt=username)
               - } else {
-                a(href="http://twitter.com/forwardtek")
+                a(href="http://twitter.com/forwardtek", target='_blank')
                   img(src="http://api.twitter.com/1/users/profile_image?screen_name=forwardtek&size=mini", alt='Unkown User')
               - }
           - }
