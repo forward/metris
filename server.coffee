@@ -116,26 +116,28 @@ class Grid
 
   needsRefresh:  ->
     currentLine = @height
-    completedRows = 0
+    needsRefresh = false
     newGrid = []
-    for y in [@height..0]
+    for y in [0..@height]
       sum = @grid[y].reduce (a, b) -> a + b
-      if sum < @width
-        newGrid[currentLine] = @grid[y]
-        currentLine -= 1
-      else
-        completedRows++
-        @score += (4*@width) #double the score for a line
+      if sum >= @width
+        needsRefresh = true
+        @grid[0] = @rowOfZeros()
+        for line in [y..1]
+          @grid[line] = @copyRow(line-1)
+    needsRefresh
 
-    if (completedRows > 0)
-      for line in [0..completedRows-1]
-        row = []
-        for x in [0..@width]
-          row[x] = 0
-        newGrid[line] = row
-
-    @grid = newGrid
-    completedRows > 0
+  copyRow: (number) ->
+    line = []
+    for x in [0..@width]
+      line[x] = @grid[number][x]
+    line  
+  
+  rowOfZeros: ->
+    line = []
+    for x in [0..@width]
+      line[x] = 0
+    line
 
 pipe.channels.on 'event:created', (gameID, socketID, data) ->
   game = games[gameID]
@@ -152,7 +154,8 @@ pipe.channels.on 'event:moved', (gameID, socketID, data) ->
   pipe.channel(gameID).trigger('moved', data, socketID)
 
 pipe.channels.on 'event:removed', (gameID, socketID, data) ->
-  delete game.shapes[data.id]
+  game = games[gameID]  
+  delete game.shapes[data.id]  
   pipe.channel(gameID).trigger('inFinalPosition', data)
 
 pipe.channels.on 'event:blockAdded', (gameID, socketID, data) ->

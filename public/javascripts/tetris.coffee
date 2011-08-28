@@ -127,7 +127,7 @@ class Tetris.AbandonedBlocks
   add: (block, notify=true) ->
     @blocks.push(block)
     if notify
-      channel.trigger 'blockAdded', x: block.x, y: block.y, playerID: Tetris.playerID
+      channel.trigger 'blockAdded', x: block.x, y: block.y, playerID: Tetris.playerID      
 
   reset: ->
     for block in @blocks
@@ -200,7 +200,7 @@ bindPusherEvents = ->
     shape.remove()
 
   channel.bind 'inFinalPosition', (data) ->
-    return if data.playerID is Tetris.playerID
+    return if data.playerID is Tetris.playerID    
     shape = Tetris.shapes[data.id]
     shape.x = data.x
     shape.y = data.y
