@@ -91,6 +91,7 @@ class window.Tetris.Shape
     Tetris.blocks.add(new Tetris.Block(@blockPosition(1)), @owned)
     Tetris.blocks.add(new Tetris.Block(@blockPosition(2)), @owned)
     Tetris.blocks.add(new Tetris.Block(@blockPosition(3)), @owned)
+    Tetris.blocks.recalculate()
     Tetris.am.play 'block-placed' unless Tetris.sfxMuted  
     @remove()
     if @owned

@@ -113,6 +113,9 @@ class Tetris.AbandonedBlocks
     if notify
       channel.trigger 'blockAdded', x: block.x, y: block.y, playerID: Tetris.playerID
 
+  recalculate: ->
+    channel.trigger 'recalculate', playerID: Tetris.playerID
+    
   reset: ->
     for block in @blocks
       Tetris.gs.delEntity(block)

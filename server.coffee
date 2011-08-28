@@ -106,27 +106,43 @@ class Grid
 
 
   needsRefresh:  ->
-    currentLine = @height
-    completedRows = 0
-    newGrid = []
-    for y in [@height..0]
-      sum = @grid[y].reduce (a, b) -> a + b
-      if sum < @width
-        newGrid[currentLine] = @grid[y]
-        currentLine -= 1
-      else
-        completedRows++
-        @score += (4*@width) #double the score for a line
-
-    if (completedRows > 0)
-      for line in [0..completedRows-1]
-        row = []
-        for x in [0..@width]
-          row[x] = 0
-        newGrid[line] = row
-
-    @grid = newGrid
-    completedRows > 0
+    needsRefresh = false
+    MAX_LINE_LENGTH = 16
+    for y in [0..@height]
+      lineOpen = false
+      counter = 0
+      for x in [0..@width]
+        elem = @grid[y][x]
+        if !lineOpen
+          counter = 0
+        if elem == 1 && lineOpen
+          counter++
+        if elem == 1 && !lineOpen
+          lineOpen = true
+          counter++
+          # console.log("counter", counter)          
+        if elem == 0 && lineOpen 
+          lineOpen = false          
+          # console.log("closed with counter", counter)                    
+          
+        if (counter >= MAX_LINE_LENGTH && ( !lineOpen || x >= @width))
+          # console.log("start shift")
+          baseline = y
+          from = x - counter 
+          to = x
+          console.log('shifting', baseline, from, to)          
+          for xx in [from..to]
+            @grid[0][xx] = 0
+          for yy in [baseline..1]
+            for xx in [from..to]
+              @grid[yy][xx] = @grid[yy-1][xx] 
+          
+          console.log("shifted")
+          needsRefresh = true
+          @score += (4*counter)
+              
+    needsRefresh
+  
 
 pipe.channels.on 'event:created', (gameID, socketID, data) ->
   game = games[gameID]
@@ -151,17 +167,21 @@ pipe.channels.on 'event:blockAdded', (gameID, socketID, data) ->
   game.grid.add(data)
 
   pipe.channel(gameID).trigger('blockAdded', data)
-  if game.grid.needsRefresh()
-    pipe.channel(gameID).trigger('refreshLines', game.grid.blocks())
-
+  
   pipe.channel(gameID).trigger('scoreUpdate', {score: game.grid.score})
   # console.log('sent score', game.grid.score)
 
   if (data.y <= 1)  #end of game
-
     pipe.channel(gameID).trigger('gameover', {})
     delete games[gameID]
     gameIDs.splice(gameIDs.indexOf(gameID), 1);
+    
+pipe.channels.on 'event:recalculate', (gameID, socketID, data) ->    
+  console.log("RECALCULATION!!!!", gameID)  
+  game = games[gameID]  
+  if game.grid.needsRefresh()
+    pipe.channel(gameID).trigger('refreshLines', game.grid.blocks())
+    pipe.channel(gameID).trigger('scoreUpdate', {score: game.grid.score})  
 
 pipe.channels.on 'event:ready', (gameID, socketID, data) ->
   game = games[gameID]
