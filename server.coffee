@@ -2,15 +2,13 @@ express = require 'express'
 games = {}
 gameIDs = []
 
-require('nko')('LqNOy7Hy1JHYB4yU')
-
-pusher_key = (process.env.PUSHER_KEY || 'af77425a09a90cbee51c')
+pusher_key = process.env.PUSHER_KEY
 
 Pipe = require 'pusher-pipe'
 pipe = Pipe.createClient
   key:    pusher_key,
-  secret: (process.env.PUSHER_SECRET  || 'fb21cbeef5a569dd6b46'),
-  app_id: (process.env.PUSHER_APP_ID  || 12)
+  secret: process.env.PUSHER_SECRET,
+  app_id: process.env.PUSHER_APP_ID
 pipe.connect()
 # pipe.debug = true
 
