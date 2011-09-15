@@ -1,0 +1,50 @@
+# Metris
+
+A multiplayer tetris game built using node.js, express.js and jsGameSoup.
+
+Built during the Node.js KO 2011 by the Forward team: <http://nko2-forward.herokuapp.com>
+
+Works best in Chrome
+
+## Requirements
+
+node.js, npm, redis and a Pusher pipe account
+
+## Setup
+
+    git clone git@github.com/forward/metris.git
+    cd metris
+    npm install
+    export PUSHER_KEY=your_pusher_key
+    export PUSHER_SECRET=your_pusher_secret
+    export PUSHER_APP_ID=your_pusher_app_id
+    coffee server.coffee
+    open http://localhost:8080
+
+## Contributors
+
+Special thanks to the following people for submitting patches:
+
+* Andy Kent
+* Andrew Nesbitt
+* Baris Balic
+* Filippo Diotalevi
+
+## Development
+
+Source hosted at [GitHub](http://github.com/forward/metris).
+Report Issues/Feature requests on [GitHub Issues](http://github.com/forward/metris/issues).
+
+### Note on Patches/Pull Requests
+
+ * Fork the project.
+ * Make your feature addition or bug fix.
+ * Add tests for it. This is important so I don't break it in a
+   future version unintentionally.
+ * Commit, do not mess with rakefile, version, or history.
+   (if you want to have your own version, that is fine but bump version in a commit by itself I can ignore when I pull)
+ * Send me a pull request. Bonus points for topic branches.
+
+## Copyright
+
+Copyright (c) 2011 Forward. See [LICENSE](https://github.com/forward/metris/blob/master/LICENSE) for details.
